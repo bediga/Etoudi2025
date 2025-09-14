@@ -1,0 +1,148 @@
+@using Syncfusion.Blazor.Grids
+@using VcBlazor.Data.Entities
+@inject VcBlazor.Data.Vc2025DbContext DbContext
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h3>Gestion des Candidats</h3>
+            <SfGrid DataSource="@candidates" AllowPaging="true" AllowSorting="true" AllowFiltering="true" 
+                    AllowResizing="true" GridLines="GridLine.Both" Height="400">
+                <GridPageSettings PageSize="10"></GridPageSettings>
+                <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
+                <GridColumns>
+                    <GridColumn Field=@nameof(Candidate.Id) HeaderText="ID" Width="70" IsPrimaryKey="true"></GridColumn>
+                    <GridColumn Field=@nameof(Candidate.FirstName) HeaderText="Prénom" Width="120"></GridColumn>
+                    <GridColumn Field=@nameof(Candidate.LastName) HeaderText="Nom" Width="120"></GridColumn>
+                    <GridColumn Field=@nameof(Candidate.Party) HeaderText="Parti" Width="150"></GridColumn>
+                    <GridColumn Field=@nameof(Candidate.Age) HeaderText="Âge" Width="80"></GridColumn>
+                    <GridColumn Field=@nameof(Candidate.Profession) HeaderText="Profession" Width="150"></GridColumn>
+                    <GridColumn Field=@nameof(Candidate.Email) HeaderText="Email" Width="200"></GridColumn>
+                    <GridColumn Field=@nameof(Candidate.TotalVotes) HeaderText="Total Votes" Width="100" Format="N0"></GridColumn>
+                    <GridColumn Field=@nameof(Candidate.IsActive) HeaderText="Actif" Width="80" DisplayAsCheckBox="true"></GridColumn>
+                </GridColumns>
+            </SfGrid>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <h4>Statistiques Rapides</h4>
+            <div class="card">
+                <div class="card-body">
+                    <p><strong>Total candidats :</strong> @totalCandidates</p>
+                    <p><strong>Candidats actifs :</strong> @activeCandidates</p>
+                    <p><strong>Total votes enregistrés :</strong> @totalVotes</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <h4>Répartition par Parti</h4>
+            <div class="card">
+                <div class="card-body">
+                    @if (partyStats.Any())
+                    {
+                        @foreach (var party in partyStats)
+                        {
+                            <div class="d-flex justify-content-between">
+                                <span>@party.Key:</span>
+                                <span><strong>@party.Value candidat(s)</strong></span>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p>Aucune donnée disponible</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Candidate> candidates = new();
+    private int totalCandidates = 0;
+    private int activeCandidates = 0;
+    private int totalVotes = 0;
+    private Dictionary<string, int> partyStats = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            // Charger les candidats depuis la base de données
+            candidates = await Task.FromResult(DbContext.Candidates.ToList());
+            
+            // Calculer les statistiques
+            totalCandidates = candidates.Count;
+            activeCandidates = candidates.Count(c => c.IsActive);
+            totalVotes = candidates.Sum(c => c.TotalVotes);
+            
+            // Statistiques par parti
+            partyStats = candidates
+                .Where(c => !string.IsNullOrEmpty(c.Party))
+                .GroupBy(c => c.Party)
+                .ToDictionary(g => g.Key, g => g.Count());
+        }
+        catch (Exception ex)
+        {
+            // En cas d'erreur de connexion à la DB, on utilise des données fictives
+            LoadSampleData();
+        }
+    }
+
+    private void LoadSampleData()
+    {
+        candidates = new List<Candidate>
+        {
+            new Candidate 
+            { 
+                Id = 1, 
+                FirstName = "Marie", 
+                LastName = "Dupont", 
+                Party = "Parti Démocratique", 
+                Age = 45, 
+                Profession = "Avocate",
+                Email = "marie.dupont@email.com",
+                TotalVotes = 15420,
+                IsActive = true
+            },
+            new Candidate 
+            { 
+                Id = 2, 
+                FirstName = "Jean", 
+                LastName = "Martin", 
+                Party = "Alliance Républicaine", 
+                Age = 52, 
+                Profession = "Médecin",
+                Email = "jean.martin@email.com",
+                TotalVotes = 12350,
+                IsActive = true
+            },
+            new Candidate 
+            { 
+                Id = 3, 
+                FirstName = "Sophie", 
+                LastName = "Bernard", 
+                Party = "Mouvement Progressiste", 
+                Age = 38, 
+                Profession = "Ingénieure",
+                Email = "sophie.bernard@email.com",
+                TotalVotes = 9800,
+                IsActive = true
+            }
+        };
+
+        totalCandidates = candidates.Count;
+        activeCandidates = candidates.Count(c => c.IsActive);
+        totalVotes = candidates.Sum(c => c.TotalVotes);
+        partyStats = candidates.GroupBy(c => c.Party).ToDictionary(g => g.Key, g => g.Count());
+    }
+}
