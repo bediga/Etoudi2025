@@ -1,0 +1,455 @@
+@model VcBlazor.Data.Entities.HourlyTurnout
+
+@{
+    ViewData["Title"] = "Supprimer Relevé - ETOUDI 2025";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- En-tête -->
+            <div class="d-flex align-items-center mb-4">
+                <a asp-action="Index" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="flex-grow-1">
+                    <h2 class="h3 mb-1 text-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Supprimer le Relevé d'Affluence
+                    </h2>
+                    <p class="text-muted mb-0">Action de suppression - Cette action est irréversible</p>
+                </div>
+            </div>
+
+            <!-- Alerte de danger -->
+            <div class="alert alert-danger border-0 shadow-sm mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                    <div>
+                        <h5 class="alert-heading mb-2">⚠️ Attention - Suppression de Données Électorales</h5>
+                        <p class="mb-1">
+                            Vous êtes sur le point de supprimer définitivement le relevé d'affluence 
+                            pour l'heure <strong>@Model.Hour:00</strong> du bureau ID @Model.PollingStationId.
+                        </p>
+                        <p class="mb-0">
+                            Cette action <strong>ne peut pas être annulée</strong> et supprimera toutes les statistiques associées.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Informations du relevé -->
+                <div class="col-lg-8">
+                    <div class="card border-danger shadow-sm mb-4">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Données à Supprimer
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Bureau de Vote
+                                    </label>
+                                    @if (Model.PollingStation != null)
+                                    {
+                                        <p class="fs-5 fw-bold text-danger">@Model.PollingStation.Name</p>
+                                        <small class="text-muted">ID: @Model.PollingStationId</small>
+                                    }
+                                    else
+                                    {
+                                        <p class="fs-5 fw-bold text-danger">Bureau #@Model.PollingStationId</p>
+                                        <small class="text-muted">Bureau non trouvé</small>
+                                    }
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-clock me-2"></i>Créneau Horaire
+                                    </label>
+                                    <p class="fs-5">
+                                        <span class="badge bg-danger fs-6">@Model.Hour:00 - @(Model.Hour + 1):00</span>
+                                    </p>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-users me-2"></i>Votants Comptabilisés
+                                    </label>
+                                    <p class="fs-4 fw-bold text-danger">@Model.VotersCount.ToString("N0")</p>
+                                    <small class="text-muted">Nouveaux votants sur ce créneau</small>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-chart-line me-2"></i>Cumul Total
+                                    </label>
+                                    <p class="fs-4 fw-bold text-danger">@Model.CumulativeCount.ToString("N0")</p>
+                                    <small class="text-muted">Total cumulé jusqu'à cette heure</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistiques qui seront perdues -->
+                    <div class="card border-warning shadow-sm mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>Statistiques qui seront Perdues
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3 bg-light">
+                                        <i class="fas fa-percentage fa-2x text-warning mb-2"></i>
+                                        <h3 class="text-danger">@Model.TurnoutRate.ToString("F1")%</h3>
+                                        <p class="text-muted mb-0">Taux de Participation</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3 bg-light">
+                                        <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                                        @{
+                                            var hourlyRate = Model.CumulativeCount > 0 ? 
+                                                (Model.VotersCount * 100.0 / Model.CumulativeCount) : 0;
+                                        }
+                                        <h3 class="text-danger">@hourlyRate.ToString("F1")%</h3>
+                                        <p class="text-muted mb-0">Part de Cette Heure</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3 bg-light">
+                                        <i class="fas fa-history fa-2x text-secondary mb-2"></i>
+                                        <h3 class="text-danger">@Model.RecordedAt.ToString("HH:mm")</h3>
+                                        <p class="text-muted mb-0">Heure d'Enregistrement</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Barre de progression qui sera perdue -->
+                            <div class="mt-4">
+                                <label class="form-label text-muted">Progression qui sera perdue</label>
+                                <div class="progress" style="height: 20px; opacity: 0.5;">
+                                    <div class="progress-bar bg-danger" 
+                                         role="progressbar" 
+                                         style="width: @Math.Min(Model.TurnoutRate, 100).ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%"
+                                         aria-valuenow="@Model.TurnoutRate" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        @Model.TurnoutRate.ToString("F1")%
+                                    </div>
+                                </div>
+                                <small class="text-muted">Cette progression ne pourra pas être récupérée</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Impact sur les statistiques -->
+                    <div class="card border-info shadow-sm mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-exclamation-circle me-2"></i>Impact sur les Statistiques Générales
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning" role="alert">
+                                <h6><i class="fas fa-chart-line me-2"></i>Conséquences de la suppression :</h6>
+                                <ul class="mb-0">
+                                    <li><strong>Données manquantes</strong> dans les rapports d'affluence horaire</li>
+                                    <li><strong>Statistiques incomplètes</strong> pour le bureau @Model.PollingStationId</li>
+                                    <li><strong>Calculs de tendances</strong> potentiellement faussés</li>
+                                    <li><strong>Historique électoral</strong> incomplet pour cette période</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <p class="text-muted mb-0">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    <strong>Recommandation :</strong> Considérez plutôt modifier les données si elles sont incorrectes, 
+                                    plutôt que de les supprimer complètement.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Historique -->
+                    <div class="card border-secondary shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-history me-2"></i>Historique du Relevé
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">Date d'Enregistrement</label>
+                                    <p class="text-dark">@Model.RecordedAt.ToString("dd/MM/yyyy HH:mm:ss")</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">Enregistré par</label>
+                                    @if (Model.RecordedByUser != null)
+                                    {
+                                        <p class="text-dark">@Model.RecordedByUser.FirstName @Model.RecordedByUser.LastName</p>
+                                    }
+                                    else if (Model.RecordedBy.HasValue)
+                                    {
+                                        <p class="text-dark">Utilisateur #@Model.RecordedBy</p>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted fst-italic">Non spécifié</p>
+                                    }
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">ID Système</label>
+                                    <p class="text-dark font-monospace">@Model.Id</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panneau d'action -->
+                <div class="col-lg-4">
+                    <div class="card border-danger shadow-sm sticky-top">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-trash-alt me-2"></i>Confirmer la Suppression
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Étapes de confirmation -->
+                            <div class="mb-4">
+                                <h6 class="text-danger mb-3">
+                                    <i class="fas fa-shield-alt me-2"></i>Vérifications Obligatoires
+                                </h6>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="confirmUnderstood">
+                                    <label class="form-check-label" for="confirmUnderstood">
+                                        Je comprends que cette action est <strong>irréversible</strong>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="confirmData">
+                                    <label class="form-check-label" for="confirmData">
+                                        J'accepte la perte des <strong>données électorales</strong>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="confirmStats">
+                                    <label class="form-check-label" for="confirmStats">
+                                        J'accepte l'impact sur les <strong>statistiques générales</strong>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Confirmation par saisie -->
+                            <div class="mb-4">
+                                <h6 class="text-danger mb-3">
+                                    <i class="fas fa-keyboard me-2"></i>Confirmation de Sécurité
+                                </h6>
+                                <label class="form-label">
+                                    Tapez "SUPPRIMER" pour confirmer :
+                                </label>
+                                <input type="text" id="confirmationText" class="form-control" 
+                                       placeholder="SUPPRIMER" autocomplete="off">
+                                <small class="text-muted">Tapez exactement : <code>SUPPRIMER</code></small>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="d-grid gap-2">
+                                <form asp-action="DeleteConfirmed" method="post" id="deleteForm">
+                                    <input asp-for="Id" type="hidden" />
+                                    <button type="submit" id="deleteButton" 
+                                            class="btn btn-danger btn-lg w-100" disabled>
+                                        <i class="fas fa-trash-alt me-2"></i>
+                                        SUPPRIMER DÉFINITIVEMENT
+                                    </button>
+                                </form>
+                                
+                                <a asp-action="Details" asp-route-id="@Model.Id" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Annuler
+                                </a>
+                                
+                                <hr>
+                                
+                                <a asp-action="Edit" asp-route-id="@Model.Id" 
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-edit me-2"></i>Modifier plutôt
+                                </a>
+                            </div>
+
+                            <!-- État de validation -->
+                            <div class="mt-4 p-3 bg-light rounded">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-check-circle me-2"></i>État de Validation
+                                </h6>
+                                <div id="validationStatus">
+                                    <small class="text-muted">Complétez les vérifications ci-dessus...</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function updateValidationStatus() {
+            const confirmUnderstood = document.getElementById('confirmUnderstood').checked;
+            const confirmData = document.getElementById('confirmData').checked;
+            const confirmStats = document.getElementById('confirmStats').checked;
+            const confirmationText = document.getElementById('confirmationText').value.trim().toUpperCase();
+            const deleteButton = document.getElementById('deleteButton');
+            const validationStatus = document.getElementById('validationStatus');
+            
+            let isValid = true;
+            let messages = [];
+            
+            // Vérifications
+            if (!confirmUnderstood) {
+                isValid = false;
+                messages.push('❌ Comprendre l\'irréversibilité');
+            } else {
+                messages.push('✅ Irréversibilité comprise');
+            }
+            
+            if (!confirmData) {
+                isValid = false;
+                messages.push('❌ Accepter la perte des données');
+            } else {
+                messages.push('✅ Perte de données acceptée');
+            }
+            
+            if (!confirmStats) {
+                isValid = false;
+                messages.push('❌ Accepter l\'impact statistique');
+            } else {
+                messages.push('✅ Impact statistique accepté');
+            }
+            
+            if (confirmationText !== 'SUPPRIMER') {
+                isValid = false;
+                messages.push('❌ Mot de confirmation incorrect');
+            } else if (confirmationText === 'SUPPRIMER') {
+                messages.push('✅ Mot de confirmation correct');
+            }
+            
+            // Mise à jour de l'interface
+            deleteButton.disabled = !isValid;
+            
+            if (isValid) {
+                deleteButton.classList.remove('btn-outline-danger');
+                deleteButton.classList.add('btn-danger');
+                validationStatus.innerHTML = messages.map(msg => 
+                    `<small class="text-success d-block">${msg}</small>`
+                ).join('');
+            } else {
+                deleteButton.classList.remove('btn-danger');
+                deleteButton.classList.add('btn-outline-danger');
+                validationStatus.innerHTML = messages.map(msg => 
+                    `<small class="${msg.startsWith('✅') ? 'text-success' : 'text-danger'} d-block">${msg}</small>`
+                ).join('');
+            }
+        }
+        
+        // Confirmation finale avant envoi
+        document.getElementById('deleteForm').addEventListener('submit', function(e) {
+            const confirmed = confirm(
+                `DERNIÈRE CONFIRMATION\n\n` +
+                `Vous allez supprimer définitivement :\n` +
+                `• Relevé d'affluence heure @Model.Hour:00\n` +
+                `• Bureau ID @Model.PollingStationId\n` +
+                `• @Model.VotersCount votants comptabilisés\n` +
+                `• @Model.CumulativeCount cumul total\n` +
+                `• Taux de @Model.TurnoutRate.ToString("F1")% de participation\n\n` +
+                `Cette action est IRRÉVERSIBLE !\n\n` +
+                `Cliquez OK pour confirmer la suppression.`
+            );
+            
+            if (!confirmed) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Désactiver le bouton pour éviter double soumission
+            document.getElementById('deleteButton').disabled = true;
+            document.getElementById('deleteButton').innerHTML = 
+                '<i class="fas fa-spinner fa-spin me-2"></i>Suppression en cours...';
+        });
+        
+        // Écoute des changements
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('confirmUnderstood').addEventListener('change', updateValidationStatus);
+            document.getElementById('confirmData').addEventListener('change', updateValidationStatus);
+            document.getElementById('confirmStats').addEventListener('change', updateValidationStatus);
+            document.getElementById('confirmationText').addEventListener('input', updateValidationStatus);
+            
+            // Validation initiale
+            updateValidationStatus();
+        });
+        
+        // Protection contre fermeture accidentielle
+        window.addEventListener('beforeunload', function(e) {
+            const hasStartedDeletion = document.getElementById('deleteButton').disabled && 
+                                     document.getElementById('confirmationText').value.trim().toUpperCase() === 'SUPPRIMER';
+            
+            if (!hasStartedDeletion) {
+                e.preventDefault();
+                e.returnValue = 'Êtes-vous sûr de vouloir quitter cette page de suppression ?';
+            }
+        });
+    </script>
+}
+
+<style>
+    .sticky-top {
+        top: 20px;
+    }
+    
+    .card-header {
+        border-bottom: none;
+        font-weight: 600;
+    }
+    
+    .form-check-input:checked {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    .btn-danger:disabled {
+        opacity: 0.4;
+    }
+    
+    code {
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+    }
+    
+    .font-monospace {
+        font-family: 'Courier New', monospace;
+    }
+    
+    .progress {
+        border-radius: 0.5rem;
+    }
+    
+    @@media (max-width: 768px) {
+        .sticky-top {
+            position: relative !important;
+            top: auto !important;
+        }
+    }
+</style>

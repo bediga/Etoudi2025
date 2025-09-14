@@ -1,0 +1,480 @@
+@model IEnumerable<VcBlazor.Data.Entities.ElectionResult>
+
+@{
+    ViewData["Title"] = "Résultats Électoraux - ETOUDI 2025";
+    var chartId = "resultsChart_" + Guid.NewGuid().ToString("N")[..8];
+}
+
+<div class="container-fluid py-4">
+    <!-- En-tête avec titre et statistiques -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-gradient-primary text-white">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="h3 mb-2">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                Résultats Électoraux ETOUDI 2025
+                            </h1>
+                            <p class="mb-0 opacity-90">Suivi en temps réel des résultats et statistiques électorales</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="@Url.Action("Create")" class="btn btn-light btn-lg">
+                                <i class="fas fa-plus me-2"></i>
+                                Nouveau Résultat
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques clés -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-vote-yea fa-2x"></i>
+                    </div>
+                    <h3 class="h4 mb-1">@(Model?.Sum(r => r.Votes) ?? 0)</h3>
+                    <small class="text-muted">Total Votes</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-percentage fa-2x"></i>
+                    </div>
+                    <h3 class="h4 mb-1">@((Model?.Any() == true ? Model.Average(r => r.Percentage) : 0).ToString("F1"))%</h3>
+                    <small class="text-muted">Participation Moyenne</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <h3 class="h4 mb-1">@(Model?.Count(r => r.Verified) ?? 0)</h3>
+                    <small class="text-muted">Résultats Vérifiés</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                    <h3 class="h4 mb-1">@(Model?.Count(r => !r.Verified) ?? 0)</h3>
+                    <small class="text-muted">En Attente</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres et recherche -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        Filtres et Recherche
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Région</label>
+                            <select name="regionId" class="form-select">
+                                <option value="">Toutes les régions</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Candidat</label>
+                            <input type="text" name="candidate" class="form-control" placeholder="Nom du candidat">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Status</label>
+                            <select name="verified" class="form-select">
+                                <option value="">Tous</option>
+                                <option value="true">Vérifié</option>
+                                <option value="false">En attente</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-search me-1"></i> Filtrer
+                                </button>
+                                <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i> Reset
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique de répartition -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light border-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Répartition des Votes par Candidat
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="@chartId" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Tableau des résultats -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 py-3">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list-alt me-2"></i>
+                                Liste des Résultats (@(Model?.Count() ?? 0) résultats)
+                            </h5>
+                        </div>
+                        <div class="col-auto">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-download me-1"></i> Exporter
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle dropdown-toggle-split" 
+                                        data-bs-toggle="dropdown">
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>PDF</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-csv me-2"></i>CSV</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3">
+                                            <i class="fas fa-hashtag me-1"></i>ID
+                                        </th>
+                                        <th scope="col" class="py-3">
+                                            <i class="fas fa-user me-1"></i>Candidat
+                                        </th>
+                                        <th scope="col" class="py-3">
+                                            <i class="fas fa-map-marker-alt me-1"></i>Bureau de Vote
+                                        </th>
+                                        <th scope="col" class="py-3 text-center">
+                                            <i class="fas fa-vote-yea me-1"></i>Votes
+                                        </th>
+                                        <th scope="col" class="py-3 text-center">
+                                            <i class="fas fa-percentage me-1"></i>Pourcentage
+                                        </th>
+                                        <th scope="col" class="py-3 text-center">
+                                            <i class="fas fa-check-circle me-1"></i>Status
+                                        </th>
+                                        <th scope="col" class="py-3 text-center">
+                                            <i class="fas fa-calendar me-1"></i>Soumis le
+                                        </th>
+                                        <th scope="col" class="py-3 text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var result in Model)
+                                    {
+                                        <tr>
+                                            <td class="px-4 py-3">
+                                                <span class="badge bg-light text-dark">#@result.Id</span>
+                                            </td>
+                                            <td class="py-3">
+                                                <div class="d-flex align-items-center">
+                                                    @if (result.Candidate?.Photo != null && !string.IsNullOrEmpty(result.Candidate.Photo))
+                                                    {
+                                                        <img src="@result.Candidate.Photo" alt="@result.Candidate.FirstName @result.Candidate.LastName" 
+                                                             class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="bg-secondary rounded-circle me-3 d-flex align-items-center justify-content-center" 
+                                                             style="width: 40px; height: 40px;">
+                                                            <i class="fas fa-user text-white"></i>
+                                                        </div>
+                                                    }
+                                                    <div>
+                                                        <div class="fw-medium">@result.Candidate?.FirstName @result.Candidate?.LastName</div>
+                                                        <small class="text-muted">
+                                                            @if (result.Candidate?.Party != null)
+                                                            {
+                                                                <span class="badge bg-info text-dark">@result.Candidate.Party</span>
+                                                            }
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="py-3">
+                                                @if (result.PollingStation != null)
+                                                {
+                                                    <div>
+                                                        <div class="fw-medium">@result.PollingStation.Name</div>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-map-pin me-1"></i>@result.PollingStation.Address
+                                                        </small>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Non spécifié</span>
+                                                }
+                                            </td>
+                                            <td class="py-3 text-center">
+                                                <span class="badge bg-primary fs-6">@result.Votes.ToString("N0")</span>
+                                                <div class="small text-muted">/ @result.TotalVotes.ToString("N0")</div>
+                                            </td>
+                                            <td class="py-3 text-center">
+                                                <div class="position-relative">
+                                                    <div class="progress" style="height: 8px;">
+                                                        <div class="progress-bar bg-success" role="progressbar" 
+                                                             style="width: @(result.Percentage)%" 
+                                                             aria-valuenow="@result.Percentage" aria-valuemin="0" aria-valuemax="100">
+                                                        </div>
+                                                    </div>
+                                                    <small class="fw-medium">@result.Percentage.ToString("F1")%</small>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 text-center">
+                                                @if (result.Verified)
+                                                {
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>Vérifié
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="fas fa-clock me-1"></i>En attente
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="py-3 text-center">
+                                                <div class="small">
+                                                    @result.SubmittedAt.ToString("dd/MM/yyyy")
+                                                    <br>
+                                                    <span class="text-muted">@result.SubmittedAt.ToString("HH:mm")</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 text-center">
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="@Url.Action("Details", new { id = result.Id })" 
+                                                       class="btn btn-outline-info" title="Voir détails">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    @if (!result.Verified)
+                                                    {
+                                                        <a href="@Url.Action("Edit", new { id = result.Id })" 
+                                                           class="btn btn-outline-primary" title="Modifier">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                    }
+                                                    <button type="button" class="btn btn-outline-success" 
+                                                            onclick="verifyResult(@result.Id)" title="Vérifier">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <a href="@Url.Action("Delete", new { id = result.Id })" 
+                                                       class="btn btn-outline-danger" 
+                                                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce résultat ?')"
+                                                       title="Supprimer">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucun résultat trouvé</h5>
+                            <p class="text-muted">Aucun résultat électoral n'a été enregistré pour le moment.</p>
+                            <a href="@Url.Action("Create")" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Ajouter le premier résultat
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        @if (Model != null && Model.Any())
+        {
+            <text>
+            // Graphique des résultats
+            const ctx = document.getElementById('@chartId').getContext('2d');
+            const candidateData = @Html.Raw(Json.Serialize(Model.GroupBy(r => r.Candidate?.FirstName + " " + r.Candidate?.LastName).Select(g => new { 
+                Label = g.Key, 
+                Votes = g.Sum(r => r.Votes),
+                Color = $"hsl({Model.ToList().IndexOf(g.First()) * 360 / Model.Count()}, 70%, 50%)"
+            })));
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: candidateData.map(c => c.label),
+                    datasets: [{
+                        data: candidateData.map(c => c.votes),
+                        backgroundColor: candidateData.map((c, i) => `hsl(${i * 360 / candidateData.length}, 70%, 50%)`),
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return context.label + ': ' + context.parsed.toLocaleString() + ' votes (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            </text>
+        }
+
+        // Fonction de vérification des résultats
+        function verifyResult(resultId) {
+            if (confirm('Êtes-vous sûr de vouloir vérifier ce résultat ?')) {
+                // Implémentation AJAX pour la vérification
+                fetch('@Url.Action("Verify")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    },
+                    body: JSON.stringify({ id: resultId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Erreur lors de la vérification: ' + (data.message || 'Erreur inconnue'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors de la vérification du résultat');
+                });
+            }
+        }
+
+        // Auto-refresh toutes les 30 secondes
+        setInterval(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (!urlParams.has('autoRefresh') || urlParams.get('autoRefresh') === 'true') {
+                // Recharger seulement les données, pas la page entière
+                fetch(window.location.href, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Mettre à jour les statistiques en temps réel
+                        console.log('Données mises à jour');
+                    }
+                });
+            }
+        }, 30000);
+    </script>
+}
+
+@section Styles {
+    <style>
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
+        .card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+        .progress {
+            border-radius: 10px;
+        }
+        .progress-bar {
+            border-radius: 10px;
+        }
+        .btn-group-sm .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+        .badge {
+            font-weight: 500;
+        }
+        @@media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+            .btn-group-sm .btn {
+                padding: 0.2rem 0.4rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+}

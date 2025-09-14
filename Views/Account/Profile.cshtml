@@ -1,0 +1,257 @@
+@model VcBlazor.Data.Models.ApplicationUser
+@{
+    ViewData["Title"] = "Mon Profil";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Mon Profil</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-user-circle text-primary"></i>
+                    Mon Profil Utilisateur
+                </h2>
+                <div>
+                    <a asp-action="ChangePassword" class="btn btn-outline-warning">
+                        <i class="fas fa-key"></i> Changer le mot de passe
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Informations personnelles -->
+                <div class="col-md-8">
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-id-card"></i> Informations Personnelles
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Prénom</label>
+                                    <p class="form-control-plaintext">@Model.FirstName</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Nom</label>
+                                    <p class="form-control-plaintext">@Model.LastName</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Adresse email</label>
+                                    <p class="form-control-plaintext">
+                                        <i class="fas fa-envelope text-info me-2"></i>
+                                        @Model.Email
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Téléphone</label>
+                                    <p class="form-control-plaintext">
+                                        @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                                        {
+                                            <i class="fas fa-phone text-success me-2"></i>
+                                            @Model.PhoneNumber
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Non renseigné</span>
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Localisation administrative -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-map-marker-alt"></i> Localisation Administrative
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Région</label>
+                                    <p class="form-control-plaintext">
+                                        @(Model.Region ?? "Non assignée")
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Département</label>
+                                    <p class="form-control-plaintext">
+                                        @(Model.Department ?? "Non assigné")
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Arrondissement</label>
+                                    <p class="form-control-plaintext">
+                                        @(Model.Arrondissement ?? "Non assigné")
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Commune</label>
+                                    <p class="form-control-plaintext">
+                                        @(Model.Commune ?? "Non assignée")
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informations de compte -->
+                <div class="col-md-4">
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user-shield"></i> Informations de Compte
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Rôle</label>
+                                <p class="form-control-plaintext">
+                                    <span class="badge bg-primary fs-6">
+                                        <i class="fas fa-shield-alt"></i>
+                                        @Model.Role
+                                    </span>
+                                </p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Statut</label>
+                                <p class="form-control-plaintext">
+                                    @if (Model.IsActive)
+                                    {
+                                        <span class="badge bg-success fs-6">
+                                            <i class="fas fa-check-circle"></i> Actif
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger fs-6">
+                                            <i class="fas fa-times-circle"></i> Inactif
+                                        </span>
+                                    }
+                                </p>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Compte créé le</label>
+                                <p class="form-control-plaintext">
+                                    <i class="fas fa-calendar-alt text-muted me-2"></i>
+                                    @Model.CreatedAt.ToString("dd/MM/yyyy à HH:mm")
+                                </p>
+                            </div>
+
+                            @if (Model.LastLoginAt.HasValue)
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Dernière connexion</label>
+                                    <p class="form-control-plaintext">
+                                        <i class="fas fa-sign-in-alt text-success me-2"></i>
+                                        @Model.LastLoginAt.Value.ToString("dd/MM/yyyy à HH:mm")
+                                    </p>
+                                </div>
+                            }
+
+                            @if (Model.PasswordChangedAt.HasValue)
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Mot de passe modifié le</label>
+                                    <p class="form-control-plaintext">
+                                        <i class="fas fa-key text-warning me-2"></i>
+                                        @Model.PasswordChangedAt.Value.ToString("dd/MM/yyyy à HH:mm")
+                                    </p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Permissions -->
+                    <div class="card shadow">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="fas fa-lock"></i> Permissions
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @{
+                                var permissions = VcBlazor.Data.Models.Authorization.PermissionRegistry.GetRolePermissions(Model.Role);
+                            }
+                            
+                            @if (permissions.Any())
+                            {
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach (var permission in permissions.Take(5))
+                                    {
+                                        <span class="badge bg-secondary text-wrap" style="font-size: 0.7em;">
+                                            @permission.Replace(".", " ").Replace("_", " ")
+                                        </span>
+                                    }
+                                    @if (permissions.Length > 5)
+                                    {
+                                        <span class="badge bg-info" style="font-size: 0.7em;">
+                                            +@(permissions.Length - 5) autres
+                                        </span>
+                                    }
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        Total: @permissions.Length permission(s)
+                                    </small>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted mb-0">Aucune permission assignée</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: box-shadow 0.15s ease-in-out;
+    }
+
+    .card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .form-control-plaintext {
+        padding-left: 0;
+        margin-bottom: 0;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 0.5rem;
+    }
+
+    .breadcrumb {
+        background-color: transparent;
+        padding: 0;
+        margin-bottom: 1rem;
+    }
+
+    .badge {
+        font-size: 0.85em;
+    }
+
+    .fw-bold {
+        font-weight: 600 !important;
+        color: #495057;
+    }
+</style>

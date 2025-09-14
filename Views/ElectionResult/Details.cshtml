@@ -1,0 +1,422 @@
+@model VcBlazor.Data.Entities.ElectionResult
+
+@{
+    ViewData["Title"] = "Détails Résultat - ETOUDI 2025";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- En-tête -->
+            <div class="d-flex align-items-center mb-4">
+                <a asp-action="Index" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="flex-grow-1">
+                    <h2 class="h3 mb-1">
+                        <i class="fas fa-chart-bar text-info"></i>
+                        Détails du Résultat Électoral
+                    </h2>
+                    <p class="text-muted mb-0">
+                        @if (Model?.Candidate != null)
+                        {
+                            @($"Résultat de {Model.Candidate.FirstName} {Model.Candidate.LastName}")
+                        }
+                        else
+                        {
+                            @("Résultat électoral détaillé")
+                        }
+                    </p>
+                </div>
+                <div class="btn-group">
+                    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">
+                        <i class="fas fa-edit me-2"></i>Modifier
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model?.Id" class="btn btn-outline-danger">
+                        <i class="fas fa-trash me-2"></i>Supprimer
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Colonne principale -->
+                <div class="col-lg-8">
+                    <!-- Résumé du résultat -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-poll me-2"></i>Résumé du Résultat
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Score principal -->
+                            <div class="row text-center mb-4">
+                                <div class="col-md-4">
+                                    <div class="border rounded-3 p-4 bg-light h-100">
+                                        <i class="fas fa-vote-yea fa-3x text-success mb-3"></i>
+                                        <h2 class="display-6 fw-bold text-success mb-2">
+                                                                                    @(Model?.Votes.ToString("N0"))
+                                        </h2>
+                                        <p class="text-muted mb-0">Votes Obtenus</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded-3 p-4 bg-light h-100">
+                                        <i class="fas fa-chart-pie fa-3x text-info mb-3"></i>
+                                        <h2 class="display-6 fw-bold text-info mb-2">
+                                                                                    @(Model?.TotalVotes.ToString("N0"))
+                                        </h2>
+                                        <p class="text-muted mb-0">Total Exprimés</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded-3 p-4 bg-light h-100">
+                                        @{
+                                            var percentage = Model?.Percentage ?? 0;
+                                            var percentageClass = percentage >= 50 ? "text-success" : 
+                                                                 percentage >= 25 ? "text-primary" : 
+                                                                 percentage >= 10 ? "text-warning" : "text-danger";
+                                            var percentageIcon = percentage >= 50 ? "fas fa-trophy" : 
+                                                               percentage >= 25 ? "fas fa-chart-line" : 
+                                                               percentage >= 10 ? "fas fa-minus" : "fas fa-arrow-down";
+                                        }
+                                        <i class="@percentageIcon fa-3x @percentageClass mb-3"></i>
+                                        <h2 class="display-6 fw-bold @percentageClass mb-2">
+                                            @percentage.ToString("F2")%
+                                        </h2>
+                                        <p class="text-muted mb-0">Score Electoral</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Barre de progression détaillée -->
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label fw-bold mb-0">Performance Électorale</label>
+                                    <span class="badge bg-secondary">@percentage.ToString("F2")%</span>
+                                </div>
+                                <div class="progress" style="height: 30px;">
+                                    @{
+                                        var progressClass = percentage >= 50 ? "bg-success" : 
+                                                          percentage >= 25 ? "bg-primary" : 
+                                                          percentage >= 10 ? "bg-warning" : "bg-danger";
+                                    }
+                                    <div class="progress-bar @progressClass" 
+                                         role="progressbar" 
+                                         style="width: @percentage.ToString("F2")%"
+                                         aria-valuenow="@percentage" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        @percentage.ToString("F2")%
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <small class="text-muted">0%</small>
+                                    <small class="text-muted">25%</small>
+                                    <small class="text-muted">50%</small>
+                                    <small class="text-muted">75%</small>
+                                    <small class="text-muted">100%</small>
+                                </div>
+                            </div>
+
+                            <!-- Statistiques comparatives -->
+                            @{
+                                var remainingVotes = (Model?.TotalVotes ?? 0) - (Model?.Votes ?? 0);
+                var remainingPercentage = Model?.TotalVotes > 0 ? (remainingVotes * 100.0 / Model.TotalVotes) : 0;
+                            }
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-light border-0">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-users text-primary mb-2"></i>
+                                            <h6 class="card-title">Autres Candidats</h6>
+                                            <h4 class="text-primary">@remainingVotes.ToString("N0")</h4>
+                                            <small class="text-muted">@remainingPercentage.ToString("F1")% des votes</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-light border-0">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-chart-line text-success mb-2"></i>
+                                            <h6 class="card-title">Position</h6>
+                                            <h4 class="text-success">
+                                                @(percentage >= 50 ? "1er" : 
+                                                 percentage >= 25 ? "Qualifié" : 
+                                                 percentage >= 10 ? "Visible" : "Marginal")
+                                            </h4>
+                                            <small class="text-muted">Performance relative</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informations candidat -->
+                    @if (Model?.Candidate != null)
+                    {
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-user-tie me-2"></i>Informations du Candidat
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-2 text-center">
+                                        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" 
+                                             style="width: 80px; height: 80px;">
+                                            <i class="fas fa-user fa-2x"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <h4 class="mb-2">@Model.Candidate.FirstName @Model.Candidate.LastName</h4>
+                                        
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <p class="mb-1">
+                                                    <i class="fas fa-envelope text-muted me-2"></i>
+                                                    <strong>Email:</strong> @(Model.Candidate.Email ?? "Non renseigné")
+                                                </p>
+                                                <p class="mb-1">
+                                                    <i class="fas fa-phone text-muted me-2"></i>
+                                                    <strong>Téléphone:</strong> @(Model.Candidate.Phone ?? "Non renseigné")
+                                                </p>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <p class="mb-1">
+                                                    <i class="fas fa-flag text-muted me-2"></i>
+                                                    <strong>Parti:</strong> @(Model.Candidate.Party ?? "Indépendant")
+                                                </p>
+                                                <p class="mb-1">
+                                                    <i class="fas fa-calendar text-muted me-2"></i>
+                                                    <strong>Candidature:</strong> @(Model.Candidate.CreatedAt.ToString("dd/MM/yyyy"))
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Informations de localisation -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="fas fa-map-marker-alt me-2"></i>Localisation du Résultat
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model?.PollingStation != null)
+                            {
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="fw-bold mb-3">
+                                            <i class="fas fa-building me-2"></i>Bureau de Vote Spécifique
+                                        </h6>
+                                        <dl class="row">
+                                            <dt class="col-sm-4">Nom:</dt>
+                                            <dd class="col-sm-8">@Model.PollingStation.Name</dd>
+                                            
+                                            <dt class="col-sm-4">ID:</dt>
+                                            <dd class="col-sm-8">
+                                                <code>@Model.PollingStation.Id</code>
+                                            </dd>
+                                            
+                                            @if (!string.IsNullOrEmpty(Model.PollingStation.Address))
+                                            {
+                                                <dt class="col-sm-4">Adresse:</dt>
+                                                <dd class="col-sm-8">@Model.PollingStation.Address</dd>
+                                            }
+                                        </dl>
+                                    </div>
+                                    
+                                    @if (!string.IsNullOrEmpty(Model.PollingStation.Region))
+                                    {
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold mb-3">
+                                                <i class="fas fa-home me-2"></i>Localisation
+                                            </h6>
+                                            <dl class="row">
+                                                <dt class="col-sm-4">Région:</dt>
+                                                <dd class="col-sm-8">@(Model.PollingStation.Region ?? "Non renseignée")</dd>
+                                                
+                                                <dt class="col-sm-4">Département:</dt>
+                                                <dd class="col-sm-8">@(Model.PollingStation.Department ?? "Non renseigné")</dd>
+                                            </dl>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <i class="fas fa-globe fa-3x text-info mb-3"></i>
+                                    <h5 class="text-info">Résultat Global</h5>
+                                    <p class="text-muted">Ce résultat concerne tous les bureaux de vote confondus</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panneau latéral -->
+                <div class="col-lg-4">
+                    <!-- Statut de vérification -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header @(Model?.Verified == true ? "bg-success text-white" : "bg-warning text-dark")">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shield-alt me-2"></i>Statut de Vérification
+                            </h5>
+                        </div>
+                        <div class="card-body text-center">
+                            @if (Model?.Verified == true)
+                            {
+                                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                                <h4 class="text-success mb-2">Vérifié</h4>
+                                <p class="text-muted">Ce résultat a été contrôlé et validé</p>
+                            }
+                            else
+                            {
+                                <i class="fas fa-clock fa-4x text-warning mb-3"></i>
+                                <h4 class="text-warning mb-2">Non Vérifié</h4>
+                                <p class="text-muted">Ce résultat n'a pas encore été contrôlé</p>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(Model?.VerificationNotes))
+                            {
+                                <hr>
+                                <h6 class="fw-bold">Notes de Vérification:</h6>
+                                <p class="small text-start bg-light p-3 rounded">
+                                    @Model.VerificationNotes
+                                </p>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Métadonnées -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Métadonnées
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <dl class="mb-0">
+                                <dt class="small text-muted">ID du Résultat:</dt>
+                                <dd class="mb-3">
+                                    <code>@Model?.Id</code>
+                                </dd>
+
+                                <dt class="small text-muted">Date de Soumission:</dt>
+                                <dd class="mb-3">
+                                    <i class="fas fa-calendar me-2"></i>
+                                    @Model.SubmittedAt.ToString("dd/MM/yyyy à HH:mm")
+                                </dd>
+
+                                <dt class="small text-muted">Créé le:</dt>
+                                <dd class="mb-3">
+                                    <i class="fas fa-plus me-2"></i>
+                                    @Model.CreatedAt.ToString("dd/MM/yyyy à HH:mm")
+                                </dd>
+
+                                <dt class="small text-muted">Modifié le:</dt>
+                                <dd class="mb-0">
+                                    <i class="fas fa-edit me-2"></i>
+                                    @Model.UpdatedAt.ToString("dd/MM/yyyy à HH:mm")
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Actions rapides -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-tools me-2"></i>Actions Rapides
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">
+                                    <i class="fas fa-edit me-2"></i>Modifier ce Résultat
+                                </a>
+                                
+                                <a asp-action="Create" class="btn btn-success">
+                                    <i class="fas fa-plus me-2"></i>Nouveau Résultat
+                                </a>
+                                
+                                <hr>
+                                
+                                <a asp-controller="Candidate" asp-action="Details" asp-route-id="@Model?.CandidateId" 
+                                   class="btn btn-outline-info">
+                                    <i class="fas fa-user me-2"></i>Voir le Candidat
+                                </a>
+                                
+                                @if (Model?.PollingStationId.HasValue == true)
+                                {
+                                    <a asp-controller="PollingStation" asp-action="Details" asp-route-id="@Model.PollingStationId" 
+                                       class="btn btn-outline-primary">
+                                        <i class="fas fa-building me-2"></i>Voir le Bureau
+                                    </a>
+                                }
+                                
+                                <hr>
+                                
+                                <a asp-action="Index" class="btn btn-outline-secondary">
+                                    <i class="fas fa-list me-2"></i>Tous les Résultats
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .progress {
+        border-radius: 0.5rem;
+        background-color: #f8f9fa;
+    }
+    
+    .progress-bar {
+        transition: width 0.6s ease;
+        font-weight: 600;
+        line-height: 30px;
+        border-radius: 0.5rem;
+    }
+    
+    .card-header {
+        border-bottom: none;
+        font-weight: 600;
+    }
+    
+    .display-6 {
+        font-size: 2.5rem;
+    }
+    
+    .rounded-3 {
+        border-radius: 1rem !important;
+    }
+    
+    code {
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.9rem;
+    }
+    
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+    
+    .card .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+    }
+</style>

@@ -1,0 +1,411 @@
+@model VcBlazor.Data.Entities.Candidate
+
+@{
+    ViewData["Title"] = "Détails Candidat - ETOUDI 2025";
+}
+
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-gradient-success text-white">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="h3 mb-2">
+                                <i class="fas fa-user-tie me-2"></i>
+                                @Model.FirstName @Model.LastName
+                            </h1>
+                            <p class="mb-0 opacity-90">
+                                <strong>@Model.Party</strong> - Profil complet du candidat
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group">
+                                <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning">
+                                    <i class="fas fa-edit me-1"></i>
+                                    Modifier
+                                </a>
+                                <a href="@Url.Action("Index")" class="btn btn-light">
+                                    <i class="fas fa-arrow-left me-1"></i>
+                                    Retour
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="row">
+        <!-- Informations personnelles -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>
+                        Informations personnelles
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label class="info-label">
+                                    <i class="fas fa-user text-primary me-2"></i>
+                                    Prénom
+                                </label>
+                                <div class="info-value">@Model.FirstName</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label class="info-label">
+                                    <i class="fas fa-user text-primary me-2"></i>
+                                    Nom de famille
+                                </label>
+                                <div class="info-value">@Model.LastName</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label class="info-label">
+                                    <i class="fas fa-flag text-primary me-2"></i>
+                                    Parti politique
+                                </label>
+                                <div class="info-value">
+                                    <span class="badge bg-primary fs-6">@Model.Party</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label class="info-label">
+                                    <i class="fas fa-birthday-cake text-primary me-2"></i>
+                                    Âge
+                                </label>
+                                <div class="info-value">
+                                    @if (Model.Age.HasValue)
+                                    {
+                                        <span>@Model.Age.Value ans</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Non spécifié</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label class="info-label">
+                                    <i class="fas fa-briefcase text-primary me-2"></i>
+                                    Profession
+                                </label>
+                                <div class="info-value">
+                                    @if (!string.IsNullOrEmpty(Model.Profession))
+                                    {
+                                        @Model.Profession
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Non spécifiée</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label class="info-label">
+                                    <i class="fas fa-graduation-cap text-primary me-2"></i>
+                                    Formation
+                                </label>
+                                <div class="info-value">
+                                    @if (!string.IsNullOrEmpty(Model.Education))
+                                    {
+                                        @Model.Education
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Non spécifiée</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <div class="info-item">
+                                <label class="info-label">
+                                    <i class="fas fa-star text-primary me-2"></i>
+                                    Expérience
+                                </label>
+                                <div class="info-value">
+                                    @if (!string.IsNullOrEmpty(Model.Experience))
+                                    {
+                                        @Model.Experience
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Non spécifiée</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo et statut -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-camera me-2"></i>
+                        Photo et statut
+                    </h5>
+                </div>
+                <div class="card-body p-4 text-center">
+                    @if (!string.IsNullOrEmpty(Model.Photo))
+                    {
+                        <img src="@Model.Photo" alt="Photo de @Model.FirstName @Model.LastName" 
+                             class="img-fluid rounded mb-3" style="max-width: 200px; max-height: 200px;" />
+                    }
+                    else
+                    {
+                        <div class="bg-light rounded mb-3 d-flex align-items-center justify-content-center" 
+                             style="width: 200px; height: 200px; margin: 0 auto;">
+                            <i class="fas fa-user fa-4x text-muted"></i>
+                        </div>
+                    }
+
+                    <div class="mb-3">
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success fs-6">
+                                <i class="fas fa-check-circle me-1"></i>
+                                Candidat actif
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger fs-6">
+                                <i class="fas fa-times-circle me-1"></i>
+                                Candidat inactif
+                            </span>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">Total des votes :</span>
+                            <span class="badge bg-primary fs-6">@Model.TotalVotes.ToString("N0")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Programme électoral -->
+    @if (!string.IsNullOrEmpty(Model.Program))
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light border-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-scroll me-2"></i>
+                            Programme électoral
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="program-content">
+                            @Html.Raw(Model.Program.Replace("\n", "<br />"))
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Coordonnées -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-address-book me-2"></i>
+                        Coordonnées
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="info-item">
+                                <label class="info-label">
+                                    <i class="fas fa-envelope text-primary me-2"></i>
+                                    Email
+                                </label>
+                                <div class="info-value">
+                                    @if (!string.IsNullOrEmpty(Model.Email))
+                                    {
+                                        <a href="mailto:@Model.Email">@Model.Email</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Non spécifié</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="info-item">
+                                <label class="info-label">
+                                    <i class="fas fa-phone text-primary me-2"></i>
+                                    Téléphone
+                                </label>
+                                <div class="info-value">
+                                    @if (!string.IsNullOrEmpty(Model.Phone))
+                                    {
+                                        <a href="tel:@Model.Phone">@Model.Phone</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Non spécifié</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="info-item">
+                                <label class="info-label">
+                                    <i class="fas fa-globe text-primary me-2"></i>
+                                    Site web
+                                </label>
+                                <div class="info-value">
+                                    @if (!string.IsNullOrEmpty(Model.Website))
+                                    {
+                                        <a href="@Model.Website" target="_blank">@Model.Website</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Non spécifié</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métadonnées -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Informations système
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="info-item">
+                                <label class="info-label">
+                                    <i class="fas fa-hashtag text-primary me-2"></i>
+                                    ID du candidat
+                                </label>
+                                <div class="info-value">
+                                    <code>@Model.Id</code>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="info-item">
+                                <label class="info-label">
+                                    <i class="fas fa-plus-circle text-primary me-2"></i>
+                                    Date de création
+                                </label>
+                                <div class="info-value">
+                                    @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="info-item">
+                                <label class="info-label">
+                                    <i class="fas fa-edit text-primary me-2"></i>
+                                    Dernière modification
+                                </label>
+                                <div class="info-value">
+                                    @Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-success {
+        background: linear-gradient(45deg, #198754, #20c997);
+    }
+    
+    .info-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+    
+    .info-value {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #212529;
+    }
+    
+    .badge.fs-6 {
+        font-size: 0.875rem !important;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    code {
+        background-color: #f8f9fa;
+        color: #e83e8c;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+    }
+    
+    .program-content {
+        line-height: 1.7;
+        font-size: 1.1rem;
+    }
+</style>

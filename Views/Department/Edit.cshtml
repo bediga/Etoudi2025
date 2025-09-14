@@ -1,0 +1,305 @@
+@model VcBlazor.Data.Entities.Department
+
+@{
+    ViewData["Title"] = "Modifier Département - ETOUDI 2025";
+}
+
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-gradient-warning text-dark">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="h3 mb-2">
+                                <i class="fas fa-edit me-2"></i>
+                                Modifier le Département
+                            </h1>
+                            <p class="mb-0 opacity-80">
+                                <strong>@Model.Name</strong> - Modification des informations
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group">
+                                <a href="@Url.Action("Details", new { id = Model.Id })" class="btn btn-info">
+                                    <i class="fas fa-eye me-1"></i>
+                                    Voir détails
+                                </a>
+                                <a href="@Url.Action("Index")" class="btn btn-dark">
+                                    <i class="fas fa-arrow-left me-1"></i>
+                                    Retour
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire de modification -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Modification des informations du département
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post" novalidate>
+                        <input asp-for="Id" type="hidden" />
+                        <input asp-for="CreatedAt" type="hidden" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none"></div>
+                        
+                        <!-- Informations principales -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Informations principales
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="Name" class="form-label fw-bold">
+                                    <i class="fas fa-building me-1"></i>
+                                    Nom du département *
+                                </label>
+                                <input asp-for="Name" class="form-control form-control-lg" 
+                                       placeholder="Ex: Mfoundi, Wouri, Nyong-et-Kéllé..." />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                                <div class="form-text">
+                                    <i class="fas fa-lightbulb me-1"></i>
+                                    Nom officiel du département
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Code" class="form-label fw-bold">
+                                    <i class="fas fa-code me-1"></i>
+                                    Code du département
+                                </label>
+                                <input asp-for="Code" class="form-control form-control-lg" 
+                                       placeholder="Ex: MF, WO, NK..." />
+                                <span asp-validation-for="Code" class="text-danger"></span>
+                                <div class="form-text">Code d'identification (optionnel)</div>
+                            </div>
+                        </div>
+
+                        <!-- Région de rattachement -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-globe me-2"></i>
+                                    Localisation administrative
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="RegionId" class="form-label fw-bold">
+                                    <i class="fas fa-globe me-1"></i>
+                                    Région de rattachement *
+                                </label>
+                                <select asp-for="RegionId" class="form-select form-control-lg" asp-items="ViewBag.RegionId">
+                                    <option value="">Sélectionnez une région...</option>
+                                </select>
+                                <span asp-validation-for="RegionId" class="text-danger"></span>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Région administrative de rattachement
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-muted">
+                                    <i class="fas fa-city me-1"></i>
+                                    Nombre d'arrondissements
+                                </label>
+                                <input type="text" class="form-control form-control-lg" 
+                                       value="@Model.Arrondissements.Count arrondissement(s)" readonly />
+                                <div class="form-text">Nombre d'arrondissements rattachés</div>
+                            </div>
+                        </div>
+
+                        <!-- Arrondissements (lecture seule) -->
+                        @if (Model.Arrondissements.Any())
+                        {
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-muted mb-3">
+                                        <i class="fas fa-city me-2"></i>
+                                        Arrondissements rattachés (lecture seule)
+                                    </h6>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <div class="p-3 bg-light rounded">
+                                        @foreach (var arr in Model.Arrondissements.OrderBy(a => a.Name))
+                                        {
+                                            <span class="badge bg-secondary me-2 mb-2">
+                                                <i class="fas fa-city me-1"></i>
+                                                @arr.Name
+                                                @if (!string.IsNullOrEmpty(arr.Code))
+                                                {
+                                                    <span>(@arr.Code)</span>
+                                                }
+                                            </span>
+                                        }
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        Pour modifier les arrondissements, utilisez la page de gestion des arrondissements.
+                                    </small>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Métadonnées (lecture seule) -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-muted mb-3">
+                                    <i class="fas fa-clock me-2"></i>
+                                    Informations système (lecture seule)
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold text-muted">
+                                    <i class="fas fa-hashtag me-1"></i>
+                                    ID du département
+                                </label>
+                                <input type="text" class="form-control" value="@Model.Id" readonly />
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold text-muted">
+                                    <i class="fas fa-plus-circle me-1"></i>
+                                    Date de création
+                                </label>
+                                <input type="text" class="form-control" 
+                                       value="@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")" readonly />
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold text-muted">
+                                    <i class="fas fa-edit me-1"></i>
+                                    Dernière modification
+                                </label>
+                                <input type="text" class="form-control" 
+                                       value="@Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm")" readonly />
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <hr class="my-4">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="text-muted">
+                                        <i class="fas fa-asterisk text-danger me-1" style="font-size: 0.7em;"></i>
+                                        Champs obligatoires
+                                    </div>
+                                    <div>
+                                        <a href="@Url.Action("Details", new { id = Model.Id })" 
+                                           class="btn btn-outline-secondary btn-lg me-2">
+                                            <i class="fas fa-times me-2"></i>
+                                            Annuler
+                                        </a>
+                                        <button type="submit" class="btn btn-warning btn-lg">
+                                            <i class="fas fa-save me-2"></i>
+                                            Enregistrer les modifications
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Validation Scripts -->
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Animation pour le focus des champs
+        $(document).ready(function() {
+            $('.form-control, .form-select').on('focus', function() {
+                if (!$(this).prop('readonly')) {
+                    $(this).parent().find('.form-label').addClass('text-primary');
+                }
+            }).on('blur', function() {
+                $(this).parent().find('.form-label').removeClass('text-primary');
+            });
+
+            // Validation en temps réel pour le nom
+            $('#Name').on('input', function() {
+                var value = $(this).val().trim();
+                if (value.length > 0) {
+                    $(this).removeClass('is-invalid').addClass('is-valid');
+                } else {
+                    $(this).removeClass('is-valid').addClass('is-invalid');
+                }
+            });
+
+            // Validation de la sélection de région
+            $('#RegionId').on('change', function() {
+                var value = $(this).val();
+                if (value && value !== '') {
+                    $(this).removeClass('is-invalid').addClass('is-valid');
+                } else {
+                    $(this).removeClass('is-valid').addClass('is-invalid');
+                }
+            });
+
+            // Confirmation avant sauvegarde
+            $('form').on('submit', function(e) {
+                if (confirm('Êtes-vous sûr de vouloir enregistrer ces modifications ?')) {
+                    return true;
+                } else {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+    </script>
+}
+
+<style>
+    .form-control:focus, .form-select:focus {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    }
+    
+    .form-label {
+        transition: color 0.2s ease;
+    }
+    
+    .bg-gradient-warning {
+        background: linear-gradient(45deg, #ffc107, #ffb300);
+    }
+    
+    .form-control[readonly] {
+        background-color: #f8f9fa;
+        opacity: 0.8;
+    }
+    
+    .badge {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.6rem;
+    }
+</style>

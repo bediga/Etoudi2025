@@ -1,0 +1,317 @@
+@model VcBlazor.Data.Entities.Department
+
+@{
+    ViewData["Title"] = "Nouveau Département - ETOUDI 2025";
+}
+
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-gradient-primary text-white">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="h3 mb-2">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                Créer un Nouveau Département
+                            </h1>
+                            <p class="mb-0 opacity-90">Ajouter un département au découpage territorial ETOUDI 2025</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="@Url.Action("Index")" class="btn btn-light btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Retour à la liste
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire de création -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Informations du Département
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post" novalidate>
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none"></div>
+                        
+                        <!-- Informations de base -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Informations de Base
+                                </h6>
+                            </div>
+                            
+                            <!-- Nom du département -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Name" class="form-label required">
+                                    <i class="fas fa-map-marked-alt me-1"></i>
+                                    Nom du Département
+                                </label>
+                                <input asp-for="Name" class="form-control" placeholder="Ex: Centre, Littoral, Ouest..." 
+                                       data-validation="required" data-validation-error-msg="Le nom est obligatoire">
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                                <div class="form-text">
+                                    <i class="fas fa-lightbulb me-1"></i>
+                                    Saisissez le nom officiel du département
+                                </div>
+                            </div>
+
+                            <!-- Code du département -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Code" class="form-label">
+                                    <i class="fas fa-barcode me-1"></i>
+                                    Code Département
+                                </label>
+                                <input asp-for="Code" class="form-control" placeholder="Ex: CE, LT, OU..." 
+                                       maxlength="10" style="text-transform: uppercase;">
+                                <span asp-validation-for="Code" class="text-danger small"></span>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Code optionnel d'identification (2-10 caractères)
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rattachement régional -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-globe-africa me-2"></i>
+                                    Rattachement Régional
+                                </h6>
+                            </div>
+
+                            <!-- Région de rattachement -->
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="RegionId" class="form-label required">
+                                    <i class="fas fa-map me-1"></i>
+                                    Région de Rattachement
+                                </label>
+                                <select asp-for="RegionId" class="form-select" 
+                                        data-validation="required" data-validation-error-msg="Veuillez sélectionner une région">
+                                    <option value="">-- Sélectionnez une région --</option>
+                                    @if (ViewBag.Regions != null)
+                                    {
+                                        foreach (var region in (IEnumerable<VcBlazor.Data.Entities.Region>)ViewBag.Regions)
+                                        {
+                                            <option value="@region.Id">@region.Name @(!string.IsNullOrEmpty(region.Code) ? $"({region.Code})" : "")</option>
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="RegionId" class="text-danger small"></span>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Choisissez la région à laquelle ce département sera rattaché
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="row">
+                            <div class="col-12">
+                                <hr class="my-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Les champs marqués d'un * sont obligatoires
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary me-2">
+                                            <i class="fas fa-times me-1"></i>
+                                            Annuler
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-1"></i>
+                                            Créer le Département
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations d'aide -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-light">
+                <div class="card-body p-4">
+                    <h6 class="text-dark mb-3">
+                        <i class="fas fa-question-circle me-2"></i>
+                        Aide à la Création
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">
+                                <i class="fas fa-lightbulb me-1"></i>
+                                Bonnes Pratiques
+                            </h6>
+                            <ul class="small text-muted mb-3">
+                                <li>Utilisez les noms officiels des départements</li>
+                                <li>Les codes département facilitent l'identification</li>
+                                <li>Vérifiez le rattachement régional correct</li>
+                                <li>Évitez les doublons de noms</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-success">
+                                <i class="fas fa-map-marked-alt me-1"></i>
+                                Après Création
+                            </h6>
+                            <ul class="small text-muted mb-3">
+                                <li>Vous pourrez ajouter des arrondissements</li>
+                                <li>Associer des centres de vote</li>
+                                <li>Configurer les bureaux de vote</li>
+                                <li>Gérer les circonscriptions électorales</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-capitalisation du code
+            const codeInput = document.querySelector('input[name="Code"]');
+            if (codeInput) {
+                codeInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.toUpperCase();
+                });
+            }
+
+            // Validation en temps réel
+            const form = document.querySelector('form');
+            const inputs = form.querySelectorAll('input[required], select[required]');
+            
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    validateField(this);
+                });
+                
+                input.addEventListener('input', function() {
+                    if (this.classList.contains('is-invalid')) {
+                        validateField(this);
+                    }
+                });
+            });
+
+            function validateField(field) {
+                const isValid = field.checkValidity() && field.value.trim() !== '';
+                field.classList.toggle('is-valid', isValid);
+                field.classList.toggle('is-invalid', !isValid);
+            }
+
+            // Soumission du formulaire
+            form.addEventListener('submit', function(e) {
+                let isFormValid = true;
+                
+                inputs.forEach(input => {
+                    validateField(input);
+                    if (!input.checkValidity() || input.value.trim() === '') {
+                        isFormValid = false;
+                    }
+                });
+
+                if (!isFormValid) {
+                    e.preventDefault();
+                    
+                    // Afficher le résumé des erreurs
+                    const errorSummary = document.querySelector('[asp-validation-summary]');
+                    if (errorSummary) {
+                        errorSummary.classList.remove('d-none');
+                        errorSummary.innerHTML = '<ul><li>Veuillez corriger les erreurs dans le formulaire</li></ul>';
+                    }
+
+                    // Focus sur le premier champ invalide
+                    const firstInvalidField = form.querySelector('.is-invalid');
+                    if (firstInvalidField) {
+                        firstInvalidField.focus();
+                        firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            });
+
+            // Animation de succès
+            const nameInput = document.querySelector('input[name="Name"]');
+            if (nameInput) {
+                nameInput.addEventListener('input', function() {
+                    if (this.value.length > 2) {
+                        this.classList.add('is-valid');
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
+        
+        .required::after {
+            content: " *";
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        .is-valid {
+            border-color: #28a745 !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73.79-.79L4.35 7.2l2.86-2.86.79.79-3.65 3.65z'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right calc(0.375em + 0.1875rem) center !important;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem) !important;
+        }
+        
+        .is-invalid {
+            border-color: #dc3545 !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 2.4 2.8m0-2.8-2.4 2.8'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right calc(0.375em + 0.1875rem) center !important;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem) !important;
+        }
+        
+        @@media (max-width: 768px) {
+            .container-fluid {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+            
+            .card-body {
+                padding: 1rem !important;
+            }
+        }
+    </style>
+}

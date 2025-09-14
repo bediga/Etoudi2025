@@ -1,0 +1,62 @@
+@{
+    ViewData["Title"] = "Gestion des Candidats";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Election" asp-action="Dashboard">Élection</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Candidats</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-users text-success"></i>
+                    @ViewData["Title"] - ETOUDI 2025
+                </h2>
+                <div>
+                    <a asp-controller="Candidate" asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Nouveau Candidat
+                    </a>
+                    <a href="#" class="btn btn-outline-secondary">
+                        <i class="fas fa-download"></i> Export Excel
+                    </a>
+                </div>
+            </div>
+
+            <!-- Composant Blazor intégré dans la vue MVC -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users"></i> Liste des Candidats
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @(await Html.RenderComponentAsync<VcBlazor.Components.CandidateManagement>(RenderMode.ServerPrerendered))
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.syncfusion.com/ej2/bootstrap5.css" rel="stylesheet" />
+}
+
+@section Scripts {
+    <script src="_framework/blazor.server.js"></script>
+    <script src="https://cdn.syncfusion.com/ej2/dist/ej2.min.js"></script>
+    <script>
+        // Initialisation personnalisée si nécessaire
+        window.blazorInterop = {
+            showAlert: function(message) {
+                alert(message);
+            }
+        };
+    </script>
+}

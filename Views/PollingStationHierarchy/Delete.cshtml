@@ -1,0 +1,460 @@
+@model VcBlazor.Data.Entities.PollingStationHierarchy
+
+@{
+    ViewData["Title"] = "Supprimer Bureau - ETOUDI 2025";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- En-tête -->
+            <div class="d-flex align-items-center mb-4">
+                <a asp-action="Index" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="flex-grow-1">
+                    <h2 class="h3 mb-1 text-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Supprimer le Bureau de Vote
+                    </h2>
+                    <p class="text-muted mb-0">Action de suppression - Attention cette action est irréversible</p>
+                </div>
+            </div>
+
+            <!-- Alerte de danger -->
+            <div class="alert alert-danger border-0 shadow-sm mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                    <div>
+                        <h5 class="alert-heading mb-2">⚠️ Attention - Action Irréversible</h5>
+                        <p class="mb-1">
+                            Vous êtes sur le point de supprimer définitivement le bureau de vote 
+                            <strong>"@Model.Name"</strong> (N° @Model.StationNumber).
+                        </p>
+                        <p class="mb-0">
+                            Cette action <strong>ne peut pas être annulée</strong> et supprimera toutes les données associées.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Informations du bureau -->
+                <div class="col-lg-8">
+                    <div class="card border-danger shadow-sm mb-4">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Informations à Supprimer
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-sitemap me-2"></i>Nom du Bureau
+                                    </label>
+                                    <p class="fs-5 fw-bold text-danger">@Model.Name</p>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-hashtag me-2"></i>Numéro de Bureau
+                                    </label>
+                                    <p class="fs-5">
+                                        <span class="badge bg-danger fs-6">@Model.StationNumber</span>
+                                    </p>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-warehouse me-2"></i>Centre de Vote
+                                    </label>
+                                    @if (Model.VotingCenter != null)
+                                    {
+                                        <p class="fs-6">@Model.VotingCenter.Name</p>
+                                        @if (Model.VotingCenter.Commune != null)
+                                        {
+                                            <small class="text-muted">
+                                                <i class="fas fa-map-marker-alt me-1"></i>@Model.VotingCenter.Commune.Name
+                                                @if (Model.VotingCenter.Commune.Arrondissement != null)
+                                                {
+                                                    <text>, @Model.VotingCenter.Commune.Arrondissement.Name</text>
+                                                }
+                                            </small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted fst-italic">Non défini</p>
+                                    }
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-toggle-on me-2"></i>Statut Actuel
+                                    </label>
+                                    <p>
+                                        @switch (Model.Status)
+                                        {
+                                            case "active":
+                                                <span class="badge bg-success fs-6">
+                                                    <i class="fas fa-check-circle me-1"></i>Actif
+                                                </span>
+                                                break;
+                                            case "pending":
+                                                <span class="badge bg-warning fs-6">
+                                                    <i class="fas fa-clock me-1"></i>En attente
+                                                </span>
+                                                break;
+                                            case "closed":
+                                                <span class="badge bg-secondary fs-6">
+                                                    <i class="fas fa-times-circle me-1"></i>Fermé
+                                                </span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary fs-6">@Model.Status</span>
+                                                break;
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Données électorales qui seront perdues -->
+                    <div class="card border-warning shadow-sm mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>Données Électorales qui seront Perdues
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3 bg-light">
+                                        <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                        <h4 class="text-danger">@Model.RegisteredVoters.ToString("N0")</h4>
+                                        <p class="text-muted mb-0">Électeurs Inscrits</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3 bg-light">
+                                        <i class="fas fa-vote-yea fa-2x text-success mb-2"></i>
+                                        <h4 class="text-danger">@Model.VotesSubmitted.ToString("N0")</h4>
+                                        <p class="text-muted mb-0">Votes Soumis</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3 bg-light">
+                                        <i class="fas fa-percentage fa-2x text-warning mb-2"></i>
+                                        <h4 class="text-danger">@Model.TurnoutRate.ToString("F1")%</h4>
+                                        <p class="text-muted mb-0">Taux Participation</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Relations impactées -->
+                    @if (Model.BureauAssignments?.Any() == true)
+                    {
+                        <div class="card border-info shadow-sm mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-link me-2"></i>Relations qui seront Supprimées
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning" role="alert">
+                                    <i class="fas fa-users-cog me-2"></i>
+                                    <strong>@Model.BureauAssignments.Count() assignation(s)</strong> 
+                                    liée(s) à ce bureau seront également supprimée(s).
+                                </div>
+                                <p class="text-muted">
+                                    Cette suppression cassera les liens avec les assignations d'utilisateurs 
+                                    et pourrait impacter le bon fonctionnement du système.
+                                </p>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Historique -->
+                    <div class="card border-secondary shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-history me-2"></i>Historique du Bureau
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">Date de Création</label>
+                                    <p class="text-dark">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">Dernière Modification</label>
+                                    <p class="text-dark">@Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">ID Système</label>
+                                    <p class="text-dark font-monospace">@Model.Id</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panneau d'action -->
+                <div class="col-lg-4">
+                    <div class="card border-danger shadow-sm sticky-top">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-trash-alt me-2"></i>Confirmer la Suppression
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Étape 1: Vérification -->
+                            <div class="mb-4">
+                                <h6 class="text-danger mb-3">
+                                    <i class="fas fa-shield-alt me-2"></i>Étape 1: Vérification
+                                </h6>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="confirmUnderstand">
+                                    <label class="form-check-label" for="confirmUnderstand">
+                                        Je comprends que cette action est <strong>irréversible</strong>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="confirmData">
+                                    <label class="form-check-label" for="confirmData">
+                                        J'accepte la perte des <strong>données électorales</strong>
+                                    </label>
+                                </div>
+                                @if (Model.BureauAssignments?.Any() == true)
+                                {
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="confirmRelations">
+                                        <label class="form-check-label" for="confirmRelations">
+                                            J'accepte la suppression des <strong>assignations</strong>
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Étape 2: Confirmation -->
+                            <div class="mb-4">
+                                <h6 class="text-danger mb-3">
+                                    <i class="fas fa-keyboard me-2"></i>Étape 2: Confirmation
+                                </h6>
+                                <label class="form-label">
+                                    Tapez le nom du bureau pour confirmer :
+                                </label>
+                                <input type="text" id="confirmationText" class="form-control" 
+                                       placeholder="@Model.Name" 
+                                       autocomplete="off">
+                                <small class="text-muted">Tapez exactement : <code>@Model.Name</code></small>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="d-grid gap-2">
+                                <form asp-action="DeleteConfirmed" method="post" id="deleteForm">
+                                    <input asp-for="Id" type="hidden" />
+                                    <button type="submit" id="deleteButton" 
+                                            class="btn btn-danger btn-lg w-100" 
+                                            disabled>
+                                        <i class="fas fa-trash-alt me-2"></i>
+                                        SUPPRIMER DÉFINITIVEMENT
+                                    </button>
+                                </form>
+                                
+                                <a asp-action="Details" asp-route-id="@Model.Id" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Annuler
+                                </a>
+                                
+                                <hr>
+                                
+                                <a asp-action="Index" class="btn btn-outline-primary">
+                                    <i class="fas fa-list me-2"></i>Retour à la Liste
+                                </a>
+                            </div>
+
+                            <!-- État de validation -->
+                            <div class="mt-4 p-3 bg-light rounded">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-check-circle me-2"></i>Validation
+                                </h6>
+                                <div id="validationStatus">
+                                    <small class="text-muted">Complétez les étapes ci-dessus...</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const expectedName = @Html.Raw(Json.Serialize(Model.Name));
+        
+        function updateValidationStatus() {
+            const confirmUnderstand = document.getElementById('confirmUnderstand').checked;
+            const confirmData = document.getElementById('confirmData').checked;
+            const confirmRelations = document.getElementById('confirmRelations');
+            const confirmRelationsChecked = confirmRelations ? confirmRelations.checked : true;
+            const confirmationText = document.getElementById('confirmationText').value.trim();
+            const deleteButton = document.getElementById('deleteButton');
+            const validationStatus = document.getElementById('validationStatus');
+            
+            let isValid = true;
+            let messages = [];
+            
+            // Vérifications
+            if (!confirmUnderstand) {
+                isValid = false;
+                messages.push('❌ Comprendre l\'irréversibilité');
+            } else {
+                messages.push('✅ Irréversibilité comprise');
+            }
+            
+            if (!confirmData) {
+                isValid = false;
+                messages.push('❌ Accepter la perte des données');
+            } else {
+                messages.push('✅ Perte de données acceptée');
+            }
+            
+            if (confirmRelations && !confirmRelationsChecked) {
+                isValid = false;
+                messages.push('❌ Accepter suppression assignations');
+            } else if (confirmRelations) {
+                messages.push('✅ Suppression assignations acceptée');
+            }
+            
+            if (confirmationText !== expectedName) {
+                isValid = false;
+                messages.push('❌ Nom du bureau incorrect');
+            } else if (confirmationText === expectedName) {
+                messages.push('✅ Nom du bureau confirmé');
+            }
+            
+            // Mise à jour de l'interface
+            deleteButton.disabled = !isValid;
+            
+            if (isValid) {
+                deleteButton.classList.remove('btn-outline-danger');
+                deleteButton.classList.add('btn-danger');
+                validationStatus.innerHTML = messages.map(msg => 
+                    `<small class="text-success d-block">${msg}</small>`
+                ).join('');
+            } else {
+                deleteButton.classList.remove('btn-danger');
+                deleteButton.classList.add('btn-outline-danger');
+                validationStatus.innerHTML = messages.map(msg => 
+                    `<small class="${msg.startsWith('✅') ? 'text-success' : 'text-danger'} d-block">${msg}</small>`
+                ).join('');
+            }
+        }
+        
+        // Confirmation finale avant envoi
+        document.getElementById('deleteForm').addEventListener('submit', function(e) {
+            const confirmed = confirm(
+                `DERNIÈRE CONFIRMATION\n\n` +
+                `Vous allez supprimer définitivement :\n` +
+                `• Bureau : ${expectedName}\n` +
+                `• Numéro : @Model.StationNumber\n` +
+                `• Électeurs inscrits : @Model.RegisteredVoters\n` +
+                `• Votes soumis : @Model.VotesSubmitted\n\n` +
+                `Cette action est IRRÉVERSIBLE !\n\n` +
+                `Cliquez OK pour confirmer la suppression.`
+            );
+            
+            if (!confirmed) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Désactiver le bouton pour éviter double soumission
+            document.getElementById('deleteButton').disabled = true;
+            document.getElementById('deleteButton').innerHTML = 
+                '<i class="fas fa-spinner fa-spin me-2"></i>Suppression en cours...';
+        });
+        
+        // Écoute des changements
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('confirmUnderstand').addEventListener('change', updateValidationStatus);
+            document.getElementById('confirmData').addEventListener('change', updateValidationStatus);
+            
+            const confirmRelations = document.getElementById('confirmRelations');
+            if (confirmRelations) {
+                confirmRelations.addEventListener('change', updateValidationStatus);
+            }
+            
+            document.getElementById('confirmationText').addEventListener('input', updateValidationStatus);
+            
+            // Validation initiale
+            updateValidationStatus();
+        });
+        
+        // Protection contre fermeture accidentelle
+        window.addEventListener('beforeunload', function(e) {
+            const hasStartedDeletion = document.getElementById('deleteButton').disabled && 
+                                     document.getElementById('confirmationText').value.trim() === expectedName;
+            
+            if (!hasStartedDeletion) {
+                e.preventDefault();
+                e.returnValue = 'Êtes-vous sûr de vouloir quitter cette page ?';
+            }
+        });
+        
+        // Auto-focus sur le champ de confirmation quand les checkboxes sont cochées
+        document.getElementById('confirmData').addEventListener('change', function() {
+            if (this.checked) {
+                setTimeout(() => {
+                    document.getElementById('confirmationText').focus();
+                }, 100);
+            }
+        });
+    </script>
+}
+
+<style>
+    .sticky-top {
+        top: 20px;
+    }
+    
+    .card-header {
+        border-bottom: none;
+        font-weight: 600;
+    }
+    
+    .form-check-input:checked {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    .btn-danger:disabled {
+        opacity: 0.4;
+    }
+    
+    code {
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+    }
+    
+    .font-monospace {
+        font-family: 'Courier New', monospace;
+    }
+    
+    @@media (max-width: 768px) {
+        .sticky-top {
+            position: relative !important;
+            top: auto !important;
+        }
+    }
+</style>

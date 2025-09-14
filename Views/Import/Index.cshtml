@@ -1,0 +1,229 @@
+@{
+    ViewData["Title"] = "Import CSV - Données Électorales";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- En-tête -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-1">
+                        <i class="fas fa-file-import text-primary"></i>
+                        Import CSV - Données Électorales
+                    </h2>
+                    <p class="text-muted mb-0">Importez les régions, départements, arrondissements et communes depuis un fichier CSV</p>
+                </div>
+            </div>
+
+            <!-- Messages de feedback -->
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Warning"] != null)
+            {
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    @TempData["Warning"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Carte d'instructions -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Instructions d'Import
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-file-csv text-success me-2"></i>Format du Fichier CSV</h6>
+                                    <ul class="list-unstyled mb-3">
+                                        <li><i class="fas fa-check text-success me-2"></i>Format: <code>.csv</code></li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Encodage: UTF-8</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Séparateur: virgule (,)</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Taille max: 50MB</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-columns text-info me-2"></i>Colonnes Requises</h6>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-circle text-danger me-2" style="font-size: 8px;"></i><strong>Région</strong> (obligatoire)</li>
+                                        <li><i class="fas fa-circle text-danger me-2" style="font-size: 8px;"></i><strong>Département</strong> (obligatoire)</li>
+                                        <li><i class="fas fa-circle text-warning me-2" style="font-size: 8px;"></i><strong>Arrondissement</strong> (optionnel)</li>
+                                        <li><i class="fas fa-circle text-warning me-2" style="font-size: 8px;"></i><strong>Commune</strong> (optionnel)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Astuce:</strong> Les données existantes ne seront pas dupliquées. Le système détecte automatiquement les entités déjà présentes.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions rapides -->
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-tools me-2"></i>
+                                Actions Rapides
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="@Url.Action("DownloadSample")" class="btn btn-outline-primary">
+                                    <i class="fas fa-download me-2"></i>
+                                    Télécharger Exemple CSV
+                                </a>
+                                <a asp-controller="Region" asp-action="Index" class="btn btn-outline-secondary">
+                                    <i class="fas fa-globe-africa me-2"></i>
+                                    Voir les Régions
+                                </a>
+                                <a asp-controller="Department" asp-action="Index" class="btn btn-outline-secondary">
+                                    <i class="fas fa-map-marked-alt me-2"></i>
+                                    Voir les Départements
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulaire d'upload -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-upload me-2"></i>
+                        Uploader le Fichier CSV
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="UploadCsv" method="post" enctype="multipart/form-data" id="uploadForm">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="csvFile" class="form-label fw-semibold">
+                                        <i class="fas fa-file me-2"></i>
+                                        Sélectionner le fichier CSV
+                                    </label>
+                                    <input type="file" 
+                                           class="form-control form-control-lg" 
+                                           id="csvFile" 
+                                           name="csvFile" 
+                                           accept=".csv"
+                                           required>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Sélectionnez le fichier "Liste Bureaux de Vote 2025.csv" depuis votre dossier Téléchargements.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div class="d-grid w-100 mb-3">
+                                    <button type="submit" class="btn btn-success btn-lg" id="uploadBtn">
+                                        <i class="fas fa-cloud-upload-alt me-2"></i>
+                                        Importer les Données
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Avertissements et informations -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Important</h6>
+                        <ul class="mb-0">
+                            <li>Assurez-vous que le fichier CSV est bien formaté et contient les colonnes requises.</li>
+                            <li>L'import peut prendre plusieurs minutes selon la taille du fichier.</li>
+                            <li>Une sauvegarde de votre base de données est recommandée avant l'import.</li>
+                            <li>En cas d'erreur, vérifiez les logs de l'application pour plus de détails.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Indicateur de chargement -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <h5>Import en cours...</h5>
+                <p class="text-muted mb-0">Veuillez patienter pendant le traitement du fichier CSV.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function() {
+            // Afficher l'indicateur de chargement
+            var loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+            loadingModal.show();
+            
+            // Désactiver le bouton pour éviter les soumissions multiples
+            document.getElementById('uploadBtn').disabled = true;
+        });
+
+        // Validation côté client
+        document.getElementById('csvFile').addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const fileSize = file.size / 1024 / 1024; // en MB
+                const fileName = file.name.toLowerCase();
+                
+                if (!fileName.endsWith('.csv')) {
+                    alert('Veuillez sélectionner un fichier CSV.');
+                    this.value = '';
+                    return;
+                }
+                
+                if (fileSize > 50) {
+                    alert('Le fichier est trop volumineux. Taille maximale: 50MB.');
+                    this.value = '';
+                    return;
+                }
+            }
+        });
+    </script>
+}
+
+<style>
+    .bg-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+</style>

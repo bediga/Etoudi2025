@@ -1,0 +1,508 @@
+@model VcBlazor.Data.Entities.User
+
+@{
+    ViewData["Title"] = "Nouvel Utilisateur";
+}
+
+<style>
+    .avatar-preview { width: 120px; height: 120px; object-fit: cover; }
+    .password-strength-meter { height: 8px; }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h4 mb-0">
+                    <i class="fas fa-user-plus text-primary me-2"></i>
+                    Nouvel Utilisateur ETOUDI 2025
+                </h2>
+                <a href="/User/Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form asp-controller="User" asp-action="Create" method="post" enctype="multipart/form-data">
+        <div class="row">
+            <!-- Colonne principale -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Informations Personnelles</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Prénom -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="FirstName" class="form-control" placeholder="Prénom" required>
+                                    <label asp-for="FirstName">Prénom *</label>
+                                </div>
+                                <span asp-validation-for="FirstName" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Nom -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="LastName" class="form-control" placeholder="Nom" required>
+                                    <label asp-for="LastName">Nom *</label>
+                                </div>
+                                <span asp-validation-for="LastName" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Email" type="email" class="form-control" placeholder="Email" required>
+                                    <label asp-for="Email">Email *</label>
+                                </div>
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                                <div class="form-text">Sera utilisé comme identifiant de connexion</div>
+                            </div>
+
+                            <!-- Téléphone -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="PhoneNumber" type="tel" class="form-control" placeholder="Téléphone">
+                                    <label asp-for="PhoneNumber">Numéro de téléphone</label>
+                                </div>
+                                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Mot de passe -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Password" type="password" class="form-control" placeholder="Mot de passe" required>
+                                    <label asp-for="Password">Mot de passe *</label>
+                                </div>
+                                <div class="password-strength-meter rounded mt-1">
+                                    <div id="password-strength-bar" class="h-100 rounded" style="width: 0%; background-color: #dc3545;"></div>
+                                </div>
+                                <div class="form-text">
+                                    <span id="password-strength-text">Minimum 8 caractères</span>
+                                    <button type="button" class="btn btn-sm btn-link p-0 ms-2" onclick="generatePassword()">
+                                        <i class="fas fa-key"></i> Générer
+                                    </button>
+                                </div>
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Confirmation mot de passe -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input type="password" id="confirmPassword" class="form-control" placeholder="Confirmer mot de passe" required>
+                                    <label for="confirmPassword">Confirmer mot de passe *</label>
+                                </div>
+                                <div id="password-match" class="form-text"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rôle et permissions -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Rôle et Permissions</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Rôle -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <select asp-for="Role" class="form-select" required>
+                                        <option value="">Sélectionner un rôle</option>
+                                        <option value="admin">Administrateur</option>
+                                        <option value="supervisor">Superviseur</option>
+                                        <option value="operator">Opérateur</option>
+                                        <option value="observer">Observateur</option>
+                                    </select>
+                                    <label asp-for="Role">Rôle *</label>
+                                </div>
+                                <span asp-validation-for="Role" class="text-danger small"></span>
+                                
+                                <!-- Description du rôle -->
+                                <div id="role-description" class="mt-2 p-2 bg-light rounded small" style="display: none;">
+                                    <!-- Contenu généré par JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- Station de vote -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="PollingStationId" type="number" class="form-control" placeholder="ID Station">
+                                    <label asp-for="PollingStationId">ID Station de vote</label>
+                                </div>
+                                <span asp-validation-for="PollingStationId" class="text-danger small"></span>
+                                <div class="form-text">Laisser vide si non applicable</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Localisation -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Informations de Localisation</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Région -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Region" class="form-control" placeholder="Région">
+                                    <label asp-for="Region">Région</label>
+                                </div>
+                                <span asp-validation-for="Region" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Département -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Department" class="form-control" placeholder="Département">
+                                    <label asp-for="Department">Département</label>
+                                </div>
+                                <span asp-validation-for="Department" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Arrondissement -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Arrondissement" class="form-control" placeholder="Arrondissement">
+                                    <label asp-for="Arrondissement">Arrondissement</label>
+                                </div>
+                                <span asp-validation-for="Arrondissement" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Commune -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Commune" class="form-control" placeholder="Commune">
+                                    <label asp-for="Commune">Commune</label>
+                                </div>
+                                <span asp-validation-for="Commune" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne latérale -->
+            <div class="col-lg-4">
+                <!-- Photo de profil -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Photo de Profil</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <div id="avatar-preview" class="mx-auto mb-3">
+                                <div class="rounded-circle avatar-preview border d-flex align-items-center justify-content-center bg-light">
+                                    <i class="fas fa-user fa-3x text-muted"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <input type="file" id="avatar-input" class="form-control" accept="image/*">
+                        <input type="hidden" asp-for="AvatarPath" id="avatar-path">
+                        
+                        <div class="form-text mt-2">
+                            Formats acceptés : JPG, PNG, GIF (max 2MB)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Options de sécurité -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Options de Sécurité</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-3">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" checked>
+                            <label asp-for="IsActive" class="form-check-label">
+                                Compte actif
+                            </label>
+                        </div>
+                        
+                        <div class="form-check form-switch">
+                            <input asp-for="MustChangePassword" class="form-check-input" type="checkbox" checked>
+                            <label asp-for="MustChangePassword" class="form-check-label">
+                                Forcer le changement de mot de passe
+                            </label>
+                        </div>
+                        
+                        <div class="form-text mt-2">
+                            L'utilisateur devra changer son mot de passe à la première connexion
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informations système -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Informations</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-calendar-plus text-muted me-2"></i>
+                            <small class="text-muted">
+                                Création : @DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+                            </small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-key text-muted me-2"></i>
+                            <small class="text-muted">
+                                Mot de passe généré automatiquement
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <a href="/User/Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                            <div>
+                                <button type="button" class="btn btn-outline-primary me-2" onclick="previewUser()">
+                                    <i class="fas fa-eye me-2"></i>Aperçu
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Créer l'utilisateur
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal d'aperçu -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Aperçu de l'utilisateur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="preview-content">
+                <!-- Le contenu sera généré dynamiquement -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Descriptions des rôles
+    const roleDescriptions = {
+        'admin': 'Accès complet au système : gestion des utilisateurs, configuration, supervision complète',
+        'supervisor': 'Supervision des élections : validation des résultats, gestion des opérateurs',
+        'operator': 'Saisie des données : enregistrement des résultats, gestion des bureaux de vote',
+        'observer': 'Consultation seulement : accès en lecture aux données et rapports'
+    };
+
+    // Gestion du changement de rôle
+    document.getElementById('Role').addEventListener('change', function() {
+        const role = this.value;
+        const descriptionDiv = document.getElementById('role-description');
+        
+        if (role && roleDescriptions[role]) {
+            descriptionDiv.innerHTML = `<strong>${role.charAt(0).toUpperCase() + role.slice(1)} :</strong> ${roleDescriptions[role]}`;
+            descriptionDiv.style.display = 'block';
+        } else {
+            descriptionDiv.style.display = 'none';
+        }
+    });
+
+    // Validation de la force du mot de passe
+    document.getElementById('Password').addEventListener('input', function() {
+        const password = this.value;
+        const strengthBar = document.getElementById('password-strength-bar');
+        const strengthText = document.getElementById('password-strength-text');
+        
+        let strength = 0;
+        let text = 'Très faible';
+        let color = '#dc3545';
+        
+        if (password.length >= 8) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[a-z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+        
+        switch(strength) {
+            case 0:
+            case 1:
+                text = 'Très faible';
+                color = '#dc3545';
+                break;
+            case 2:
+                text = 'Faible';
+                color = '#fd7e14';
+                break;
+            case 3:
+                text = 'Moyen';
+                color = '#ffc107';
+                break;
+            case 4:
+                text = 'Fort';
+                color = '#198754';
+                break;
+            case 5:
+                text = 'Très fort';
+                color = '#20c997';
+                break;
+        }
+        
+        strengthBar.style.width = `${(strength / 5) * 100}%`;
+        strengthBar.style.backgroundColor = color;
+        strengthText.textContent = text;
+    });
+
+    // Validation de la confirmation du mot de passe
+    document.getElementById('confirmPassword').addEventListener('input', function() {
+        const password = document.getElementById('Password').value;
+        const confirmPassword = this.value;
+        const matchDiv = document.getElementById('password-match');
+        
+        if (confirmPassword.length === 0) {
+            matchDiv.textContent = '';
+            return;
+        }
+        
+        if (password === confirmPassword) {
+            matchDiv.innerHTML = '<span class="text-success"><i class="fas fa-check me-1"></i>Les mots de passe correspondent</span>';
+        } else {
+            matchDiv.innerHTML = '<span class="text-danger"><i class="fas fa-times me-1"></i>Les mots de passe ne correspondent pas</span>';
+        }
+    });
+
+    // Génération automatique de mot de passe
+    function generatePassword() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@@#$%^&*';
+        let password = '';
+        
+        for (let i = 0; i < 12; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        
+        document.getElementById('Password').value = password;
+        document.getElementById('confirmPassword').value = password;
+        
+        // Déclencher les validations
+        document.getElementById('Password').dispatchEvent(new Event('input'));
+        document.getElementById('confirmPassword').dispatchEvent(new Event('input'));
+    }
+
+    // Gestion de l'upload d'avatar
+    document.getElementById('avatar-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+                alert('L\\'avatar ne doit pas dépasser 2MB');
+                return;
+            }
+
+            if (!file.type.match(/^image\/(jpeg|jpg|png|gif)$/)) {
+                alert('Format d\\'image non supporté');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = document.createElement('img');
+                img.src = event.target.result;
+                img.className = 'rounded-circle avatar-preview border';
+                
+                const preview = document.getElementById('avatar-preview');
+                preview.innerHTML = '';
+                preview.appendChild(img);
+                
+                document.getElementById('avatar-path').value = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function previewUser() {
+        const firstName = document.getElementById('FirstName').value;
+        const lastName = document.getElementById('LastName').value;
+        const email = document.getElementById('Email').value;
+        const role = document.getElementById('Role').value;
+        const region = document.getElementById('Region').value;
+        const department = document.getElementById('Department').value;
+        const isActive = document.getElementById('IsActive').checked;
+        const mustChangePassword = document.getElementById('MustChangePassword').checked;
+        const avatarPath = document.getElementById('avatar-path').value;
+
+        const previewContent = `
+            <div class="text-center mb-4">
+                ${avatarPath ? 
+                    `<img src="${avatarPath}" class="rounded-circle avatar-preview border mb-3">` :
+                    `<div class="rounded-circle avatar-preview border mx-auto mb-3 d-flex align-items-center justify-content-center bg-light">
+                        <i class="fas fa-user fa-3x text-muted"></i>
+                    </div>`
+                }
+                <h4>${firstName} ${lastName}</h4>
+                <p class="text-muted">${email}</p>
+                
+                <div class="mb-3">
+                    <span class="badge ${role === 'admin' ? 'bg-danger' : role === 'supervisor' ? 'bg-warning' : role === 'operator' ? 'bg-info' : 'bg-secondary'}">${role}</span>
+                    ${isActive ? 
+                        '<span class="badge bg-success ms-2">Actif</span>' : 
+                        '<span class="badge bg-secondary ms-2">Inactif</span>'
+                    }
+                    ${mustChangePassword ? 
+                        '<span class="badge bg-warning ms-2">Changer mot de passe</span>' : ''
+                    }
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    ${region ? `<p><strong>Région:</strong> ${region}</p>` : ''}
+                    ${department ? `<p><strong>Département:</strong> ${department}</p>` : ''}
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Date de création:</strong> ${new Date().toLocaleDateString('fr-FR')}</p>
+                    <p><strong>Accès:</strong> ${roleDescriptions[role] || 'Non défini'}</p>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('preview-content').innerHTML = previewContent;
+        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+        modal.show();
+    }
+
+    // Validation du formulaire
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const password = document.getElementById('Password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Les mots de passe ne correspondent pas');
+            return false;
+        }
+        
+        if (password.length < 8) {
+            e.preventDefault();
+            alert('Le mot de passe doit contenir au moins 8 caractères');
+            return false;
+        }
+    });
+</script>

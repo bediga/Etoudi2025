@@ -1,0 +1,515 @@
+@model IEnumerable<VcBlazor.Data.Entities.Result>
+
+@{
+    ViewData["Title"] = "Résultats Électoraux - ETOUDI 2025";
+}
+
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="h3 mb-1">
+                <i class="fas fa-poll text-primary"></i>
+                Résultats Électoraux par Bureau
+            </h2>
+            <p class="text-muted mb-0">Gestion des résultats de vote par candidat et par bureau</p>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouveau Résultat
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-poll fa-2x text-primary"></i>
+                    </div>
+                    <h3 class="mb-1" id="totalResults">@Model.Count()</h3>
+                    <p class="text-muted mb-0">Résultats Totaux</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-check-circle fa-2x text-success"></i>
+                    </div>
+                    <h3 class="mb-1" id="verifiedResults">@Model.Count(r => r.Verified)</h3>
+                    <p class="text-muted mb-0">Résultats Vérifiés</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-users fa-2x text-info"></i>
+                    </div>
+                    <h3 class="mb-1" id="totalVotes">@Model.Sum(r => r.Votes).ToString("N0")</h3>
+                    <p class="text-muted mb-0">Total Votes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-building fa-2x text-warning"></i>
+                    </div>
+                    <h3 class="mb-1" id="uniqueStations">@Model.Select(r => r.PollingStationId).Distinct().Count()</h3>
+                    <p class="text-muted mb-0">Bureaux Couverts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-search me-2"></i>Recherche
+                    </label>
+                    <input type="text" id="searchInput" class="form-control" 
+                           placeholder="Rechercher candidat, bureau...">
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-shield-alt me-2"></i>Statut
+                    </label>
+                    <select id="verificationFilter" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="verified">Vérifiés</option>
+                        <option value="unverified">Non vérifiés</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-sort-numeric-up me-2"></i>Votes Min.
+                    </label>
+                    <input type="number" id="votesFilter" class="form-control" 
+                           placeholder="0" min="0">
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-calendar me-2"></i>Date
+                    </label>
+                    <input type="date" id="dateFilter" class="form-control" 
+                           value="@DateTime.Today.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label text-white">.</label>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Effacer
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="exportData()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <button type="button" class="btn btn-info" onclick="refreshStats()">
+                            <i class="fas fa-sync"></i> Stats
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des résultats -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-table me-2"></i>Résultats Électoraux Détaillés
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="resultsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="sortable" data-sort="candidate">
+                                <i class="fas fa-user me-2"></i>Candidat
+                            </th>
+                            <th class="sortable" data-sort="station">
+                                <i class="fas fa-building me-2"></i>Bureau de Vote
+                            </th>
+                            <th class="sortable" data-sort="votes">
+                                <i class="fas fa-poll me-2"></i>Votes
+                            </th>
+                            <th class="sortable" data-sort="verification">
+                                <i class="fas fa-shield-alt me-2"></i>Vérification
+                            </th>
+                            <th class="sortable" data-sort="timestamp">
+                                <i class="fas fa-clock me-2"></i>Date/Heure
+                            </th>
+                            <th class="sortable" data-sort="submitter">
+                                <i class="fas fa-user-cog me-2"></i>Soumis par
+                            </th>
+                            <th>
+                                <i class="fas fa-cogs"></i> Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr data-verified="@item.Verified.ToString().ToLower()" 
+                                data-votes="@item.Votes" 
+                                data-timestamp="@item.Timestamp.ToString("yyyy-MM-dd")">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <i class="fas fa-user-tie text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">
+                                                @if (item.Candidate != null)
+                                                {
+                                                    <text>@item.Candidate.FirstName @item.Candidate.LastName</text>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Candidat #@item.CandidateId</span>
+                                                }
+                                            </div>
+                                            @if (item.Candidate?.Party != null)
+                                            {
+                                                <small class="text-muted">@item.Candidate.Party</small>
+                                            }
+                                            else
+                                            {
+                                                <small class="text-muted">ID: @item.CandidateId</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2">
+                                            <i class="fas fa-map-marker-alt text-info"></i>
+                                        </div>
+                                        <div>
+                                            @if (item.PollingStation != null)
+                                            {
+                                                <div class="fw-semibold">@item.PollingStation.Name</div>
+                                            }
+                                            else
+                                            {
+                                                <div class="fw-semibold text-muted">Bureau #@item.PollingStationId</div>
+                                            }
+                                            <small class="text-muted">ID: @item.PollingStationId</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-center">
+                                        <span class="badge bg-primary fs-6 px-3 py-2">
+                                            <i class="fas fa-poll me-1"></i>@item.Votes.ToString("N0")
+                                        </span>
+                                        @{
+                                            var voteLevel = item.Votes switch
+                                            {
+                                                >= 500 => "Élevé",
+                                                >= 200 => "Moyen",
+                                                >= 50 => "Faible",
+                                                _ => "Très faible"
+                                            };
+                                        }
+                                        <br><small class="text-muted">@voteLevel</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-center">
+                                        @if (item.Verified)
+                                        {
+                                            <span class="badge bg-success fs-6">
+                                                <i class="fas fa-check-circle me-1"></i>Vérifié
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning fs-6">
+                                                <i class="fas fa-clock me-1"></i>En attente
+                                            </span>
+                                        }
+                                        <br>
+                                        @if (!string.IsNullOrEmpty(item.VerificationNotes))
+                                        {
+                                            <small class="text-muted" title="@item.VerificationNotes">
+                                                <i class="fas fa-comment"></i> Notes
+                                            </small>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="small text-center">
+                                        <div><i class="fas fa-calendar me-1"></i>@item.Timestamp.ToString("dd/MM/yyyy")</div>
+                                        <div><i class="fas fa-clock me-1"></i>@item.Timestamp.ToString("HH:mm")</div>
+                                        @{
+                                            var timeAgo = DateTime.UtcNow - item.Timestamp;
+                                            var timeAgoText = timeAgo.TotalDays >= 1 ? 
+                                                $"Il y a {(int)timeAgo.TotalDays}j" :
+                                                timeAgo.TotalHours >= 1 ? 
+                                                    $"Il y a {(int)timeAgo.TotalHours}h" :
+                                                    $"Il y a {(int)timeAgo.TotalMinutes}min";
+                                        }
+                                        <div class="text-muted">@timeAgoText</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="small text-center">
+                                        @if (item.SubmittedByUser != null)
+                                        {
+                                            <div class="fw-semibold">@item.SubmittedByUser.FirstName @item.SubmittedByUser.LastName</div>
+                                            <div class="text-muted">@item.SubmittedByUser.Email</div>
+                                        }
+                                        else if (item.SubmittedBy.HasValue)
+                                        {
+                                            <div class="text-muted">Utilisateur #@item.SubmittedBy</div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted fst-italic">Système</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details" asp-route-id="@item.Id" 
+                                           class="btn btn-sm btn-outline-info" title="Détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@item.Id" 
+                                           class="btn btn-sm btn-outline-primary" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        @if (!item.Verified)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-success" 
+                                                    title="Vérifier" onclick="verifyResult(@item.Id)">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        }
+                                        <a asp-action="Delete" asp-route-id="@item.Id" 
+                                           class="btn btn-sm btn-outline-danger" title="Supprimer"
+                                           onclick="return confirm('Supprimer ce résultat électoral ?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                
+                @if (!Model.Any())
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-poll fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Aucun résultat électoral</h5>
+                        <p class="text-muted">Commencez par enregistrer les premiers résultats de vote.</p>
+                        <a asp-action="Create" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Premier Résultat
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Fonctions de filtrage
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const verificationFilter = document.getElementById('verificationFilter').value;
+            const votesFilter = parseInt(document.getElementById('votesFilter').value) || 0;
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            const table = document.getElementById('resultsTable');
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            
+            for (let row of rows) {
+                let visible = true;
+                
+                // Recherche textuelle
+                if (searchTerm) {
+                    const rowText = row.textContent.toLowerCase();
+                    visible = visible && rowText.includes(searchTerm);
+                }
+                
+                // Filtre par vérification
+                if (verificationFilter) {
+                    const isVerified = row.dataset.verified === 'true';
+                    if (verificationFilter === 'verified' && !isVerified) {
+                        visible = false;
+                    } else if (verificationFilter === 'unverified' && isVerified) {
+                        visible = false;
+                    }
+                }
+                
+                // Filtre par votes minimum
+                if (votesFilter > 0) {
+                    const votes = parseInt(row.dataset.votes) || 0;
+                    visible = visible && (votes >= votesFilter);
+                }
+                
+                // Filtre par date
+                if (dateFilter) {
+                    const rowDate = row.dataset.timestamp;
+                    visible = visible && (rowDate === dateFilter);
+                }
+                
+                row.style.display = visible ? '' : 'none';
+            }
+            
+            updateStats();
+        }
+        
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('verificationFilter').value = '';
+            document.getElementById('votesFilter').value = '';
+            document.getElementById('dateFilter').value = '@DateTime.Today.ToString("yyyy-MM-dd")';
+            filterTable();
+        }
+        
+        function exportData() {
+            // Implémentation future de l'export Excel/CSV
+            alert('Fonctionnalité d\'export en cours de développement');
+        }
+        
+        function refreshStats() {
+            fetch('/Result/GetResultsStats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('totalResults').textContent = data.totalResults;
+                    document.getElementById('verifiedResults').textContent = data.verifiedResults;
+                    document.getElementById('totalVotes').textContent = data.totalVotes.toLocaleString();
+                    document.getElementById('uniqueStations').textContent = data.uniqueStations;
+                })
+                .catch(error => {
+                    console.error('Erreur lors du rafraîchissement des stats:', error);
+                });
+        }
+        
+        function updateStats() {
+            const table = document.getElementById('resultsTable');
+            const visibleRows = Array.from(table.getElementsByTagName('tbody')[0].getElementsByTagName('tr'))
+                .filter(row => row.style.display !== 'none');
+            
+            const totalVisible = visibleRows.length;
+            const verifiedVisible = visibleRows.filter(row => row.dataset.verified === 'true').length;
+            const totalVotesVisible = visibleRows.reduce((sum, row) => sum + parseInt(row.dataset.votes || 0), 0);
+            
+            // Mise à jour des compteurs (optionnel)
+            console.log(`Visible: ${totalVisible}, Verified: ${verifiedVisible}, Votes: ${totalVotesVisible}`);
+        }
+        
+        function verifyResult(resultId) {
+            if (confirm('Marquer ce résultat comme vérifié ?')) {
+                // Implémentation future de la vérification via API
+                alert('Fonctionnalité de vérification en cours de développement');
+            }
+        }
+        
+        // Tri des colonnes
+        function sortTable(columnIndex, type) {
+            const table = document.getElementById('resultsTable');
+            const tbody = table.getElementsByTagName('tbody')[0];
+            const rows = Array.from(tbody.getElementsByTagName('tr'));
+            
+            rows.sort((a, b) => {
+                let aVal, bVal;
+                
+                switch (type) {
+                    case 'number':
+                        aVal = parseFloat(a.cells[columnIndex].textContent.replace(/[^\d.-]/g, ''));
+                        bVal = parseFloat(b.cells[columnIndex].textContent.replace(/[^\d.-]/g, ''));
+                        break;
+                    case 'date':
+                        aVal = new Date(a.dataset.timestamp || a.cells[columnIndex].textContent);
+                        bVal = new Date(b.dataset.timestamp || b.cells[columnIndex].textContent);
+                        break;
+                    default:
+                        aVal = a.cells[columnIndex].textContent.toLowerCase();
+                        bVal = b.cells[columnIndex].textContent.toLowerCase();
+                }
+                
+                return aVal > bVal ? 1 : -1;
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+        }
+        
+        // Écoute des événements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Filtrage en temps réel
+            document.getElementById('searchInput').addEventListener('input', filterTable);
+            document.getElementById('verificationFilter').addEventListener('change', filterTable);
+            document.getElementById('votesFilter').addEventListener('input', filterTable);
+            document.getElementById('dateFilter').addEventListener('change', filterTable);
+            
+            // Tri sur les en-têtes
+            document.querySelectorAll('.sortable').forEach(header => {
+                header.style.cursor = 'pointer';
+                header.addEventListener('click', function() {
+                    const columnIndex = Array.from(this.parentNode.children).indexOf(this);
+                    const sortType = this.dataset.sort;
+                    
+                    // Déterminer le type de tri
+                    let type = 'text';
+                    if (['votes'].includes(sortType)) {
+                        type = 'number';
+                    } else if (['timestamp'].includes(sortType)) {
+                        type = 'date';
+                    }
+                    
+                    sortTable(columnIndex, type);
+                    
+                    // Indicateur visuel
+                    document.querySelectorAll('.sortable').forEach(h => h.classList.remove('bg-light'));
+                    this.classList.add('bg-light');
+                });
+            });
+            
+            // Mise à jour initiale des stats
+            updateStats();
+        });
+    </script>
+}
+
+<style>
+    .sortable:hover {
+        background-color: #f8f9fa !important;
+    }
+    
+    .card-header {
+        border-bottom: none;
+        font-weight: 600;
+    }
+    
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .badge {
+        font-size: 0.8rem !important;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .table th {
+        white-space: nowrap;
+    }
+</style>

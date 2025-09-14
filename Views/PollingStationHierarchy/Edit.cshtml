@@ -1,0 +1,435 @@
+@model VcBlazor.Data.Entities.PollingStationHierarchy
+
+@{
+    ViewData["Title"] = "Modifier Bureau - ETOUDI 2025";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- En-tête -->
+            <div class="d-flex align-items-center mb-4">
+                <a asp-action="Index" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="flex-grow-1">
+                    <h2 class="h3 mb-1">
+                        <i class="fas fa-edit text-primary"></i>
+                        Modifier le Bureau de Vote
+                    </h2>
+                    <p class="text-muted mb-0">Modification des informations du bureau de vote</p>
+                </div>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                    <i class="fas fa-eye"></i> Voir Détails
+                </a>
+            </div>
+
+            <!-- Alerte d'information -->
+            <div class="alert alert-info border-0 shadow-sm mb-4" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Bureau actuel:</strong> @Model.Name (@Model.StationNumber)
+                - Modifié le @Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm")
+            </div>
+
+            <form asp-action="Edit" method="post" id="editForm" class="needs-validation" novalidate>
+                <input asp-for="Id" type="hidden" />
+                <input asp-for="CreatedAt" type="hidden" />
+                
+                <div class="row">
+                    <!-- Colonne principale -->
+                    <div class="col-lg-8">
+                        <!-- Informations de base -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>Informations de Base
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label asp-for="Name" class="form-label required">
+                                            <i class="fas fa-sitemap me-2"></i>Nom du Bureau
+                                        </label>
+                                        <input asp-for="Name" class="form-control form-control-lg" 
+                                               placeholder="Ex: Bureau de Vote ETOUDI Centre 1" 
+                                               required maxlength="200" />
+                                        <span asp-validation-for="Name" class="text-danger"></span>
+                                        <div class="form-text">
+                                            <i class="fas fa-lightbulb me-1"></i>
+                                            Nom officiel du bureau de vote (200 caractères max)
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="StationNumber" class="form-label required">
+                                            <i class="fas fa-hashtag me-2"></i>Numéro de Bureau
+                                        </label>
+                                        <input asp-for="StationNumber" class="form-control form-control-lg" 
+                                               placeholder="Ex: 001" 
+                                               required maxlength="10" />
+                                        <span asp-validation-for="StationNumber" class="text-danger"></span>
+                                        <div class="form-text">Numéro unique</div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="VotingCenterId" class="form-label required">
+                                            <i class="fas fa-warehouse me-2"></i>Centre de Vote
+                                        </label>
+                                        <select asp-for="VotingCenterId" class="form-select form-select-lg" 
+                                                asp-items="ViewBag.VotingCenters" required>
+                                            <option value="">-- Sélectionner un centre --</option>
+                                        </select>
+                                        <span asp-validation-for="VotingCenterId" class="text-danger"></span>
+                                        <div class="form-text">Centre de rattachement du bureau</div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Status" class="form-label required">
+                                            <i class="fas fa-toggle-on me-2"></i>Statut
+                                        </label>
+                                        <select asp-for="Status" class="form-select form-select-lg" required>
+                                            <option value="">-- Sélectionner un statut --</option>
+                                            <option value="active" selected="@(Model.Status == "active")">
+                                                🟢 Actif
+                                            </option>
+                                            <option value="pending" selected="@(Model.Status == "pending")">
+                                                🟡 En attente
+                                            </option>
+                                            <option value="closed" selected="@(Model.Status == "closed")">
+                                                🔴 Fermé
+                                            </option>
+                                        </select>
+                                        <span asp-validation-for="Status" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Données électorales -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-vote-yea me-2"></i>Données Électorales
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="RegisteredVoters" class="form-label required">
+                                            <i class="fas fa-users me-2"></i>Électeurs Inscrits
+                                        </label>
+                                        <input asp-for="RegisteredVoters" type="number" 
+                                               class="form-control form-control-lg" 
+                                               min="0" max="10000" 
+                                               placeholder="0" required 
+                                               oninput="updateTurnoutRate()" />
+                                        <span asp-validation-for="RegisteredVoters" class="text-danger"></span>
+                                        <div class="form-text">Nombre d'électeurs inscrits</div>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="VotesSubmitted" class="form-label">
+                                            <i class="fas fa-check-circle me-2"></i>Votes Soumis
+                                        </label>
+                                        <input asp-for="VotesSubmitted" type="number" 
+                                               class="form-control form-control-lg" 
+                                               min="0" placeholder="0" 
+                                               oninput="updateTurnoutRate()" />
+                                        <span asp-validation-for="VotesSubmitted" class="text-danger"></span>
+                                        <div class="form-text">Nombre de votes reçus</div>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-chart-line me-2"></i>Taux de Participation
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="text" id="turnoutDisplay" 
+                                                   class="form-control form-control-lg text-center fw-bold" 
+                                                   value="@Model.TurnoutRate.ToString("F1")%" readonly />
+                                            <span class="input-group-text">
+                                                <i id="turnoutIcon" class="fas fa-chart-line"></i>
+                                            </span>
+                                        </div>
+                                        <div class="form-text">Calculé automatiquement</div>
+                                        <input asp-for="TurnoutRate" type="hidden" id="turnoutRateHidden" />
+                                    </div>
+                                </div>
+
+                                <!-- Barre de progression -->
+                                <div class="mt-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label mb-0">Progression du Vote</label>
+                                        <span id="progressText" class="badge bg-secondary">
+                                            @Model.VotesSubmitted / @Model.RegisteredVoters
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height: 20px;">
+                                        <div id="progressBar" 
+                                             class="progress-bar bg-@(Model.TurnoutRate >= 70 ? "success" : Model.TurnoutRate >= 50 ? "warning" : "danger")" 
+                                             role="progressbar" 
+                                             style="width: @Model.TurnoutRate.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%"
+                                             aria-valuenow="@Model.TurnoutRate" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panneau latéral -->
+                    <div class="col-lg-4">
+                        <!-- Actions de sauvegarde -->
+                        <div class="card border-0 shadow-sm mb-4 sticky-top">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-save me-2"></i>Actions
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fas fa-check me-2"></i>Enregistrer les Modifications
+                                    </button>
+                                    <a asp-action="Details" asp-route-id="@Model.Id" 
+                                       class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-2"></i>Annuler
+                                    </a>
+                                    <hr>
+                                    <a asp-action="Index" class="btn btn-outline-primary">
+                                        <i class="fas fa-list me-2"></i>Retour à la Liste
+                                    </a>
+                                </div>
+
+                                <!-- Validation en temps réel -->
+                                <div class="mt-3 p-3 bg-light rounded">
+                                    <h6 class="text-muted mb-2">
+                                        <i class="fas fa-shield-alt me-2"></i>Validation
+                                    </h6>
+                                    <div id="validationStatus">
+                                        <small class="text-muted">Remplissez le formulaire...</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informations système -->
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-cog me-2"></i>Informations Système
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <small class="text-muted">
+                                    <strong>ID:</strong> @Model.Id<br>
+                                    <strong>Créé le:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")<br>
+                                    <strong>Modifié le:</strong> @Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm")<br>
+                                    @if (Model.LastUpdate.HasValue)
+                                    {
+                                        <strong>Dernière MAJ:</strong> @Model.LastUpdate.Value.ToString("dd/MM/yyyy HH:mm")
+                                    }
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Mise à jour automatique du taux de participation
+        function updateTurnoutRate() {
+            const registered = parseInt(document.querySelector('[name="RegisteredVoters"]').value) || 0;
+            const submitted = parseInt(document.querySelector('[name="VotesSubmitted"]').value) || 0;
+            
+            let turnoutRate = 0;
+            if (registered > 0) {
+                turnoutRate = Math.min((submitted / registered) * 100, 100);
+            }
+            
+            // Mise à jour de l'affichage
+            const displayElement = document.getElementById('turnoutDisplay');
+            const hiddenElement = document.getElementById('turnoutRateHidden');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const turnoutIcon = document.getElementById('turnoutIcon');
+            
+            displayElement.value = turnoutRate.toFixed(1) + '%';
+            hiddenElement.value = turnoutRate.toFixed(2);
+            
+            // Mise à jour de la barre de progression
+            progressBar.style.width = turnoutRate.toFixed(1) + '%';
+            progressBar.setAttribute('aria-valuenow', turnoutRate.toFixed(1));
+            progressText.textContent = submitted + ' / ' + registered;
+            
+            // Couleurs selon le taux
+            progressBar.className = 'progress-bar';
+            if (turnoutRate >= 70) {
+                progressBar.classList.add('bg-success');
+                displayElement.className = 'form-control form-control-lg text-center fw-bold text-success';
+                turnoutIcon.className = 'fas fa-arrow-up text-success';
+            } else if (turnoutRate >= 50) {
+                progressBar.classList.add('bg-warning');
+                displayElement.className = 'form-control form-control-lg text-center fw-bold text-warning';
+                turnoutIcon.className = 'fas fa-minus text-warning';
+            } else {
+                progressBar.classList.add('bg-danger');
+                displayElement.className = 'form-control form-control-lg text-center fw-bold text-danger';
+                turnoutIcon.className = 'fas fa-arrow-down text-danger';
+            }
+            
+            // Validation en temps réel
+            updateValidationStatus();
+        }
+
+        // Validation en temps réel
+        function updateValidationStatus() {
+            const name = document.querySelector('[name="Name"]').value.trim();
+            const stationNumber = document.querySelector('[name="StationNumber"]').value.trim();
+            const votingCenter = document.querySelector('[name="VotingCenterId"]').value;
+            const status = document.querySelector('[name="Status"]').value;
+            const registered = parseInt(document.querySelector('[name="RegisteredVoters"]').value) || 0;
+            const submitted = parseInt(document.querySelector('[name="VotesSubmitted"]').value) || 0;
+            
+            const validationStatus = document.getElementById('validationStatus');
+            let isValid = true;
+            let messages = [];
+            
+            // Vérifications
+            if (!name || name.length < 3) {
+                isValid = false;
+                messages.push('⚠️ Nom requis (3+ caractères)');
+            }
+            
+            if (!stationNumber) {
+                isValid = false;
+                messages.push('⚠️ Numéro de bureau requis');
+            }
+            
+            if (!votingCenter) {
+                isValid = false;
+                messages.push('⚠️ Centre de vote requis');
+            }
+            
+            if (!status) {
+                isValid = false;
+                messages.push('⚠️ Statut requis');
+            }
+            
+            if (registered < 0) {
+                isValid = false;
+                messages.push('⚠️ Électeurs inscrits invalide');
+            }
+            
+            if (submitted > registered) {
+                isValid = false;
+                messages.push('⚠️ Votes > Électeurs inscrits');
+            }
+            
+            // Affichage du statut
+            if (isValid && messages.length === 0) {
+                validationStatus.innerHTML = '<small class="text-success"><i class="fas fa-check-circle me-1"></i>Formulaire valide</small>';
+                document.querySelector('button[type="submit"]').disabled = false;
+            } else {
+                const messageHtml = messages.map(msg => `<small class="text-warning d-block">${msg}</small>`).join('');
+                validationStatus.innerHTML = messageHtml || '<small class="text-muted">Remplissez le formulaire...</small>';
+                document.querySelector('button[type="submit"]').disabled = messages.length > 0;
+            }
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mise à jour initiale
+            updateTurnoutRate();
+            
+            // Écoute des changements
+            document.querySelectorAll('input, select').forEach(element => {
+                element.addEventListener('input', updateValidationStatus);
+                element.addEventListener('change', updateValidationStatus);
+            });
+            
+            // Validation du formulaire Bootstrap
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        });
+
+        // Confirmation avant quitter si modifications non sauvées
+        let formChanged = false;
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('change', function() {
+                formChanged = true;
+            });
+        });
+
+        window.addEventListener('beforeunload', function(e) {
+            if (formChanged) {
+                e.preventDefault();
+                e.returnValue = 'Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter ?';
+            }
+        });
+
+        // Désactiver la vérification si le formulaire est soumis
+        document.getElementById('editForm').addEventListener('submit', function() {
+            formChanged = false;
+        });
+    </script>
+}
+
+<style>
+    .required::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+    
+    .progress {
+        border-radius: 0.5rem;
+        background-color: #e9ecef;
+    }
+    
+    .progress-bar {
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+    
+    .card-header {
+        border-bottom: none;
+        font-weight: 600;
+    }
+    
+    .sticky-top {
+        top: 20px;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1.1rem;
+    }
+    
+    @@media (max-width: 768px) {
+        .sticky-top {
+            position: relative !important;
+            top: auto !important;
+        }
+    }
+</style>

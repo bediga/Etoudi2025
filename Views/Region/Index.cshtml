@@ -1,0 +1,494 @@
+@model IEnumerable<VcBlazor.Data.Entities.Region>
+
+@{
+    ViewData["Title"] = "Gestion des Régions - ETOUDI 2025";
+    var chartId = "regionChart_" + Guid.NewGuid().ToString("N")[..8];
+}
+
+<div class="container-fluid py-4">
+    <!-- En-tête avec titre et actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-gradient-primary text-white">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="h3 mb-2">
+                                <i class="fas fa-globe-africa me-2"></i>
+                                Gestion des Régions ETOUDI 2025
+                            </h1>
+                            <p class="mb-0 opacity-90">Administration territoriale et découpage électoral régional du Cameroun</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="@Url.Action("Create")" class="btn btn-light btn-lg">
+                                <i class="fas fa-plus me-2"></i>
+                                Nouvelle Région
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques régionales -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-globe-africa fa-2x"></i>
+                    </div>
+                    <h3 class="h4 mb-1">@(Model?.Count() ?? 0)</h3>
+                    <small class="text-muted">Total Régions</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-map-marked-alt fa-2x"></i>
+                    </div>
+                    <h3 class="h4 mb-1">@(Model?.SelectMany(r => r.Departments).Count() ?? 0)</h3>
+                    <small class="text-muted">Départements</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-code fa-2x"></i>
+                    </div>
+                    <h3 class="h4 mb-1">@(Model?.Count(r => !string.IsNullOrEmpty(r.Code)) ?? 0)</h3>
+                    <small class="text-muted">Avec Code</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-calendar fa-2x"></i>
+                    </div>
+                    <h3 class="h4 mb-1">@(Model?.Count(r => r.CreatedAt >= DateTime.Today.AddDays(-30)) ?? 0)</h3>
+                    <small class="text-muted">Créées ce mois</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres et recherche -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        Filtres et Recherche
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Rechercher une région</label>
+                            <input type="text" name="search" class="form-control" placeholder="Nom de la région..." 
+                                   value="@ViewBag.SearchTerm">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Trier par</label>
+                            <select name="sortBy" class="form-select">
+                                <option value="name">Nom</option>
+                                <option value="code" selected="@(ViewBag.SortBy == "code")">Code</option>
+                                <option value="departments" selected="@(ViewBag.SortBy == "departments")">Nb Départements</option>
+                                <option value="created" selected="@(ViewBag.SortBy == "created")">Date de création</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search me-1"></i> Filtrer
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique des départements par région -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light border-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Répartition des Départements par Région
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="@chartId" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Tableau des régions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 py-3">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list me-2"></i>
+                                Liste des Régions (@(Model?.Count() ?? 0) régions)
+                            </h5>
+                        </div>
+                        <div class="col-auto">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-download me-1"></i> Exporter
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle dropdown-toggle-split" 
+                                        data-bs-toggle="dropdown">
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>PDF</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-csv me-2"></i>CSV</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3">
+                                            <i class="fas fa-hashtag me-1"></i>ID
+                                        </th>
+                                        <th scope="col" class="py-3">
+                                            <i class="fas fa-globe-africa me-1"></i>Nom de la Région
+                                        </th>
+                                        <th scope="col" class="py-3">
+                                            <i class="fas fa-code me-1"></i>Code Région
+                                        </th>
+                                        <th scope="col" class="py-3 text-center">
+                                            <i class="fas fa-map-marked-alt me-1"></i>Départements
+                                        </th>
+                                        <th scope="col" class="py-3 text-center">
+                                            <i class="fas fa-calendar me-1"></i>Créée le
+                                        </th>
+                                        <th scope="col" class="py-3 text-center">
+                                            <i class="fas fa-clock me-1"></i>Modifiée le
+                                        </th>
+                                        <th scope="col" class="py-3 text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var region in Model)
+                                    {
+                                        <tr>
+                                            <td class="px-4 py-3">
+                                                <span class="badge bg-light text-dark">#@region.Id</span>
+                                            </td>
+                                            <td class="py-3">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" 
+                                                         style="width: 40px; height: 40px;">
+                                                        <i class="fas fa-globe-africa text-white"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-medium">@region.Name</div>
+                                                        <small class="text-muted">Région du Cameroun</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="py-3">
+                                                @if (!string.IsNullOrEmpty(region.Code))
+                                                {
+                                                    <span class="badge bg-info text-dark fs-6">@region.Code</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">
+                                                        <i class="fas fa-minus"></i> Non défini
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="py-3 text-center">
+                                                <div class="position-relative">
+                                                    <span class="badge bg-success fs-6">@region.Departments.Count()</span>
+                                                    @if (region.Departments.Any())
+                                                    {
+                                                        <div class="small text-muted mt-1" 
+                                                             title="@string.Join(", ", region.Departments.Select(d => d.Name))">
+                                                            <i class="fas fa-info-circle"></i>
+                                                            Voir détails
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="small text-warning mt-1">
+                                                            <i class="fas fa-exclamation-triangle"></i>
+                                                            Aucun
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td class="py-3 text-center">
+                                                <div class="small">
+                                                    @region.CreatedAt.ToString("dd/MM/yyyy")
+                                                    <br>
+                                                    <span class="text-muted">@region.CreatedAt.ToString("HH:mm")</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 text-center">
+                                                <div class="small">
+                                                    @region.UpdatedAt.ToString("dd/MM/yyyy")
+                                                    <br>
+                                                    <span class="text-muted">@region.UpdatedAt.ToString("HH:mm")</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 text-center">
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="@Url.Action("Details", new { id = region.Id })" 
+                                                       class="btn btn-outline-info" title="Voir détails">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="@Url.Action("Edit", new { id = region.Id })" 
+                                                       class="btn btn-outline-primary" title="Modifier">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="@Url.Action("Index", "Department", new { regionId = region.Id })" 
+                                                       class="btn btn-outline-success" title="Voir départements">
+                                                        <i class="fas fa-map-marked-alt"></i>
+                                                    </a>
+                                                    <a href="@Url.Action("Delete", new { id = region.Id })" 
+                                                       class="btn btn-outline-danger" 
+                                                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette région ? Tous les départements associés seront également supprimés.')"
+                                                       title="Supprimer">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-globe-africa fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucune région trouvée</h5>
+                            <p class="text-muted">Aucune région n'a été créée pour le moment.</p>
+                            <a href="@Url.Action("Create")" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Créer la première région
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        @if (Model != null && Model.Any())
+        {
+            <text>
+            // Graphique des départements par région
+            const ctx = document.getElementById('@chartId').getContext('2d');
+            const regionData = @Html.Raw(Json.Serialize(Model.Select(r => new { 
+                Name = r.Name,
+                Code = r.Code,
+                DepartmentCount = r.Departments.Count(),
+                Departments = r.Departments.Select(d => d.Name).ToArray()
+            })));
+
+            new Chart(ctx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: regionData.map(r => r.code ? `${r.name} (${r.code})` : r.name),
+                    datasets: [{
+                        label: 'Nombre de départements',
+                        data: regionData.map(r => r.departmentCount),
+                        backgroundColor: regionData.map((r, i) => `hsl(${i * 360 / regionData.length}, 70%, 60%)`),
+                        borderColor: regionData.map((r, i) => `hsl(${i * 360 / regionData.length}, 70%, 40%)`),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                afterBody: function(context) {
+                                    const regionInfo = regionData[context[0].dataIndex];
+                                    if (regionInfo.departments.length > 0) {
+                                        return 'Départements: ' + regionInfo.departments.join(', ');
+                                    }
+                                    return 'Aucun département';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                maxRotation: 0
+                            }
+                        }
+                    }
+                }
+            });
+            </text>
+        }
+
+        // Recherche en temps réel
+        document.querySelector('input[name="search"]')?.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const regionName = row.querySelector('td:nth-child(2) .fw-medium')?.textContent.toLowerCase() || '';
+                const regionCode = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+                
+                const matches = regionName.includes(searchTerm) || regionCode.includes(searchTerm);
+                row.style.display = matches ? '' : 'none';
+            });
+
+            // Mettre à jour le compteur
+            const visibleRows = document.querySelectorAll('tbody tr:not([style*="display: none"])');
+            const counterElement = document.querySelector('.card-header h5');
+            if (counterElement) {
+                const baseText = counterElement.textContent.split('(')[0];
+                counterElement.textContent = `${baseText}(${visibleRows.length} régions)`;
+            }
+        });
+
+        // Animation des statistiques au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            const statCards = document.querySelectorAll('.card h3');
+            statCards.forEach((card, index) => {
+                const finalValue = parseInt(card.textContent);
+                let currentValue = 0;
+                const increment = Math.max(1, Math.ceil(finalValue / 20));
+                
+                const timer = setInterval(() => {
+                    currentValue += increment;
+                    if (currentValue >= finalValue) {
+                        currentValue = finalValue;
+                        clearInterval(timer);
+                    }
+                    card.textContent = currentValue;
+                }, 50 + (index * 15));
+            });
+        });
+
+        // Tooltips pour les départements
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipElements = document.querySelectorAll('[title]');
+            tooltipElements.forEach(element => {
+                // Initialisation des tooltips Bootstrap si disponible
+                if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                    new bootstrap.Tooltip(element);
+                }
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
+        
+        .card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        .btn-group-sm .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge {
+            font-weight: 500;
+        }
+        
+        .rounded-circle {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .text-primary {
+            color: #007bff !important;
+        }
+        
+        .text-success {
+            color: #28a745 !important;
+        }
+        
+        .text-info {
+            color: #17a2b8 !important;
+        }
+        
+        .text-warning {
+            color: #ffc107 !important;
+        }
+        
+        @@media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+            
+            .btn-group-sm .btn {
+                padding: 0.2rem 0.4rem;
+                font-size: 0.8rem;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
+        }
+    </style>
+}

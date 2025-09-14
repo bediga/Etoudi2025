@@ -1,0 +1,352 @@
+@model VcBlazor.Data.Entities.Candidate
+
+@{
+    ViewData["Title"] = "Nouveau Candidat";
+}
+
+<style>
+    .photo-preview { width: 150px; height: 150px; object-fit: cover; }
+    .form-floating textarea { height: 120px; }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h4 mb-0">
+                    <i class="fas fa-user-plus text-primary me-2"></i>
+                    Nouveau Candidat ETOUDI 2025
+                </h2>
+                <a href="/Candidate/Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form asp-controller="Candidate" asp-action="Create" method="post" enctype="multipart/form-data">
+        <div class="row">
+            <!-- Colonne principale -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Informations Personnelles</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Prénom -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="FirstName" class="form-control" placeholder="Prénom" required>
+                                    <label asp-for="FirstName">Prénom *</label>
+                                </div>
+                                <span asp-validation-for="FirstName" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Nom -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="LastName" class="form-control" placeholder="Nom" required>
+                                    <label asp-for="LastName">Nom *</label>
+                                </div>
+                                <span asp-validation-for="LastName" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Email" type="email" class="form-control" placeholder="Email">
+                                    <label asp-for="Email">Email</label>
+                                </div>
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Téléphone -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Phone" type="tel" class="form-control" placeholder="Téléphone">
+                                    <label asp-for="Phone">Téléphone</label>
+                                </div>
+                                <span asp-validation-for="Phone" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Parti Politique -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Party" class="form-control" placeholder="Parti politique" required>
+                                    <label asp-for="Party">Parti Politique *</label>
+                                </div>
+                                <span asp-validation-for="Party" class="text-danger small"></span>
+                                <div class="form-text">Parti politique du candidat</div>
+                            </div>
+
+                            <!-- Âge -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Age" type="number" class="form-control" placeholder="Âge" min="18" max="100">
+                                    <label asp-for="Age">Âge</label>
+                                </div>
+                                <span asp-validation-for="Age" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Profession -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Profession" class="form-control" placeholder="Profession">
+                                    <label asp-for="Profession">Profession</label>
+                                </div>
+                                <span asp-validation-for="Profession" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Éducation -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Education" class="form-control" placeholder="Niveau d'éducation">
+                                    <label asp-for="Education">Éducation</label>
+                                </div>
+                                <span asp-validation-for="Education" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Site Web -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Website" type="url" class="form-control" placeholder="Site web">
+                                    <label asp-for="Website">Site Web</label>
+                                </div>
+                                <span asp-validation-for="Website" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Expérience -->
+                            <div class="col-12 mb-3">
+                                <div class="form-floating">
+                                    <textarea asp-for="Experience" class="form-control" placeholder="Expérience politique"></textarea>
+                                    <label asp-for="Experience">Expérience Politique</label>
+                                </div>
+                                <span asp-validation-for="Experience" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Programme -->
+                            <div class="col-12 mb-3">
+                                <div class="form-floating">
+                                    <textarea asp-for="Program" class="form-control" placeholder="Programme électoral"></textarea>
+                                    <label asp-for="Program">Programme Électoral</label>
+                                </div>
+                                <span asp-validation-for="Program" class="text-danger small"></span>
+                                <div class="form-text">Résumé du programme politique du candidat</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne latérale -->
+            <div class="col-lg-4">
+                <!-- Photo du candidat -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Photo du Candidat</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <div id="photo-preview" class="mx-auto mb-3">
+                                <div class="rounded-circle photo-preview border d-flex align-items-center justify-content-center bg-light">
+                                    <i class="fas fa-user fa-3x text-muted"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <input type="file" id="photo-input" class="form-control" accept="image/*">
+                        <input type="hidden" asp-for="Photo" id="photo-url">
+                        
+                        <div class="form-text mt-2">
+                            Formats acceptés : JPG, PNG, GIF (max 2MB)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statut -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Statut</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" checked>
+                            <label asp-for="IsActive" class="form-check-label">
+                                Candidat Actif
+                            </label>
+                        </div>
+                        <div class="form-text">
+                            Un candidat inactif n'apparaîtra pas dans les bulletins de vote
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informations système -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Informations</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-calendar text-muted me-2"></i>
+                            <small class="text-muted">
+                                Date de création : <span id="creation-date">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</span>
+                            </small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-vote-yea text-muted me-2"></i>
+                            <small class="text-muted">
+                                Votes initiaux : 0
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <a href="/Candidate/Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                            <div>
+                                <button type="button" class="btn btn-outline-primary me-2" onclick="previewCandidate()">
+                                    <i class="fas fa-eye me-2"></i>Aperçu
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Enregistrer le candidat
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal d'aperçu -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Aperçu du Candidat</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="preview-content">
+                <!-- Le contenu sera généré dynamiquement -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Gestion de l'upload de photo
+    document.getElementById('photo-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validation de la taille
+            if (file.size > 2 * 1024 * 1024) {
+                alert('La photo ne doit pas dépasser 2MB');
+                return;
+            }
+
+            // Validation du type
+            if (!file.type.match(/^image\/(jpeg|jpg|png|gif)$/)) {
+                alert('Format de photo non supporté');
+                return;
+            }
+
+            // Affichage de l'aperçu
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = document.createElement('img');
+                img.src = event.target.result;
+                img.className = 'rounded-circle photo-preview border';
+                
+                const preview = document.getElementById('photo-preview');
+                preview.innerHTML = '';
+                preview.appendChild(img);
+                
+                // Stockage de l'URL (en production, il faudrait uploader vers le serveur)
+                document.getElementById('photo-url').value = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Génération automatique du nom d'utilisateur
+    document.getElementById('FirstName').addEventListener('input', updatePreview);
+    document.getElementById('LastName').addEventListener('input', updatePreview);
+
+    function updatePreview() {
+        // Mise à jour temps réel si nécessaire
+    }
+
+    function previewCandidate() {
+        const firstName = document.getElementById('FirstName').value;
+        const lastName = document.getElementById('LastName').value;
+        const party = document.getElementById('Party').value;
+        const program = document.getElementById('Program').value;
+        const profession = document.getElementById('Profession').value;
+        const age = document.getElementById('Age').value;
+        const email = document.getElementById('Email').value;
+        const phone = document.getElementById('Phone').value;
+        const isActive = document.getElementById('IsActive').checked;
+        const photoUrl = document.getElementById('photo-url').value;
+
+        const previewContent = `
+            <div class="text-center mb-4">
+                ${photoUrl ? 
+                    `<img src="${photoUrl}" class="rounded-circle photo-preview border mb-3">` :
+                    `<div class="rounded-circle photo-preview border mx-auto mb-3 d-flex align-items-center justify-content-center bg-light">
+                        <i class="fas fa-user fa-3x text-muted"></i>
+                    </div>`
+                }
+                <h4>${firstName} ${lastName}</h4>
+                ${party ? `<span class="badge bg-primary">${party}</span>` : ''}
+                ${isActive ? 
+                    '<span class="badge bg-success ms-2">Actif</span>' : 
+                    '<span class="badge bg-secondary ms-2">Inactif</span>'
+                }
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    ${profession ? `<p><strong>Profession:</strong> ${profession}</p>` : ''}
+                    ${age ? `<p><strong>Âge:</strong> ${age} ans</p>` : ''}
+                    ${email ? `<p><strong>Email:</strong> ${email}</p>` : ''}
+                    ${phone ? `<p><strong>Téléphone:</strong> ${phone}</p>` : ''}
+                </div>
+                <div class="col-md-6">
+                    ${program ? `<p><strong>Programme:</strong></p><p class="text-muted">${program}</p>` : ''}
+                </div>
+            </div>
+        `;
+
+        document.getElementById('preview-content').innerHTML = previewContent;
+        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+        modal.show();
+    }
+
+    // Validation du formulaire
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const firstName = document.getElementById('FirstName').value.trim();
+        const lastName = document.getElementById('LastName').value.trim();
+        const party = document.getElementById('Party').value.trim();
+
+        if (!firstName || !lastName || !party) {
+            e.preventDefault();
+            alert('Veuillez remplir tous les champs obligatoires');
+            return false;
+        }
+    });
+</script>

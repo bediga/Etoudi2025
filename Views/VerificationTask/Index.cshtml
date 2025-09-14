@@ -1,0 +1,474 @@
+@model IEnumerable<VcBlazor.Data.Entities.VerificationTask>
+
+@{
+    ViewData["Title"] = "Gestion des Tâches de Vérification";
+    var pendingCount = Model?.Count(t => t.Status == "pending") ?? 0;
+    var inProgressCount = Model?.Count(t => t.Status == "in_progress") ?? 0;
+    var completedCount = Model?.Count(t => t.Status == "completed") ?? 0;
+    var totalTasks = Model?.Count() ?? 0;
+}
+
+<style>
+    .priority-high { border-left: 4px solid #dc3545; }
+    .priority-medium { border-left: 4px solid #ffc107; }
+    .priority-low { border-left: 4px solid #28a745; }
+    .task-card { transition: transform 0.2s; cursor: pointer; }
+    .task-card:hover { transform: translateY(-2px); }
+</style>
+
+<div class="container-fluid">
+    <!-- En-tête avec statistiques -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h4 mb-0">
+                    <i class="fas fa-tasks text-primary me-2"></i>
+                    Tâches de Vérification ETOUDI 2025
+                </h2>
+                <button class="btn btn-primary" onclick="refreshTasks()">
+                    <i class="fas fa-sync-alt me-2"></i>
+                    Actualiser
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques globales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="bg-warning rounded-circle p-2 me-2">
+                            <i class="fas fa-clock text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0 text-warning">@pendingCount</h3>
+                            <small class="text-muted">En attente</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="bg-info rounded-circle p-2 me-2">
+                            <i class="fas fa-hourglass-half text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0 text-info">@inProgressCount</h3>
+                            <small class="text-muted">En cours</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="bg-success rounded-circle p-2 me-2">
+                            <i class="fas fa-check-circle text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0 text-success">@completedCount</h3>
+                            <small class="text-muted">Terminées</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="bg-primary rounded-circle p-2 me-2">
+                            <i class="fas fa-list text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0 text-primary">@totalTasks</h3>
+                            <small class="text-muted">Total</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique de progression -->
+    @if (totalTasks > 0)
+    {
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Distribution des Tâches</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="tasksChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Progression</h6>
+                    </div>
+                    <div class="card-body">
+                        @{
+                            var completionRate = totalTasks > 0 ? (completedCount * 100.0 / totalTasks) : 0;
+                        }
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Taux de completion</span>
+                                <span class="fw-bold">@completionRate.ToString("F1")%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: @completionRate%"></div>
+                            </div>
+                        </div>
+                        <canvas id="progressChart" width="400" height="150"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Statut</label>
+                            <select id="statusFilter" class="form-select">
+                                <option value="">Tous les statuts</option>
+                                <option value="pending">En attente</option>
+                                <option value="in_progress">En cours</option>
+                                <option value="completed">Terminé</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Priorité</label>
+                            <select id="priorityFilter" class="form-select">
+                                <option value="">Toutes les priorités</option>
+                                <option value="high">Haute</option>
+                                <option value="normal">Normale</option>
+                                <option value="low">Faible</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Recherche</label>
+                            <input type="text" id="searchFilter" class="form-control" placeholder="Rechercher...">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-outline-secondary me-2" onclick="clearFilters()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <button class="btn btn-primary" onclick="exportTasks()">
+                                <i class="fas fa-download me-2"></i>Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des tâches -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Tâches de Vérification</h6>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model != null && Model.Any())
+                    {
+                        <div id="tasksList">
+                            @foreach (var task in Model)
+                            {
+                                var priorityClass = task.Priority switch {
+                                    "high" => "priority-high",
+                                    "normal" => "priority-medium",
+                                    "low" => "priority-low",
+                                    _ => "priority-medium"
+                                };
+                                
+                                var statusBadge = task.Status switch {
+                                    "pending" => "bg-warning",
+                                    "in_progress" => "bg-info",
+                                    "completed" => "bg-success",
+                                    _ => "bg-secondary"
+                                };
+
+                                <div class="border-bottom task-item @priorityClass" data-status="@task.Status" data-priority="@task.Priority">
+                                    <div class="p-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <span class="badge @statusBadge me-2">
+                                                        @(task.Status switch {
+                                                            "pending" => "En attente",
+                                                            "in_progress" => "En cours", 
+                                                            "completed" => "Terminé",
+                                                            _ => task.Status
+                                                        })
+                                                    </span>
+                                                    <span class="badge bg-outline-secondary me-2">
+                                                        @(task.Priority switch {
+                                                            "high" => "Haute",
+                                                            "normal" => "Normale", 
+                                                            "low" => "Faible",
+                                                            _ => task.Priority
+                                                        })
+                                                    </span>
+                                                </div>
+                                                
+                                                <h6 class="mb-1">Tâche de vérification #@task.Id</h6>
+                                                
+                                                @if (!string.IsNullOrEmpty(task.VerificationNotes))
+                                                {
+                                                    <p class="text-muted mb-2 small">@task.VerificationNotes</p>
+                                                }
+
+                                                <div class="row g-2 small text-muted">
+                                                    @if (task.AssignedDate.HasValue)
+                                                    {
+                                                        <div class="col-auto">
+                                                            <i class="fas fa-calendar me-1"></i>
+                                                            Assignée: @task.AssignedDate.Value.ToString("dd/MM/yyyy")
+                                                        </div>
+                                                    }
+                                                    
+                                                    @if (task.Checker != null)
+                                                    {
+                                                        <div class="col-auto">
+                                                            <i class="fas fa-user me-1"></i>
+                                                            Assignée à: @task.Checker.FirstName @task.Checker.LastName
+                                                        </div>
+                                                    }
+                                                    else if (task.CheckerId.HasValue)
+                                                    {
+                                                        <div class="col-auto">
+                                                            <i class="fas fa-user me-1"></i>
+                                                            Vérificateur ID: @task.CheckerId.Value
+                                                        </div>
+                                                    }
+                                                </div>
+
+                                                @if (task.CompletionDate.HasValue)
+                                                {
+                                                    <div class="small text-success mt-2">
+                                                        <i class="fas fa-check me-1"></i>
+                                                        Complétée le @task.CompletionDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                                    </div>
+                                                }
+
+                                                <div class="small text-muted mt-2">
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    Créée: @task.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                                </div>
+                                            </div>
+
+                                            <!-- Actions -->
+                                            <div class="ms-3">
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" href="#" onclick="viewTask(@task.Id)">
+                                                            <i class="fas fa-eye me-2"></i>Voir détails
+                                                        </a></li>
+                                                        
+                                                        @if (task.Status != "completed")
+                                                        {
+                                                            <li><a class="dropdown-item" href="#" onclick="assignTask(@task.Id)">
+                                                                <i class="fas fa-user-plus me-2"></i>Assigner
+                                                            </a></li>
+                                                            <li><a class="dropdown-item" href="#" onclick="startTask(@task.Id)">
+                                                                <i class="fas fa-play me-2"></i>Commencer
+                                                            </a></li>
+                                                        }
+                                                        
+                                                        <li><a class="dropdown-item" href="#" onclick="completeTask(@task.Id)">
+                                                            <i class="fas fa-check me-2"></i>Marquer terminée
+                                                        </a></li>
+                                                        
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        
+                                                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteTask(@task.Id)">
+                                                            <i class="fas fa-trash me-2"></i>Supprimer
+                                                        </a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                            <h5>Aucune tâche de vérification</h5>
+                            <p class="text-muted">Les tâches de vérification apparaîtront ici.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Configuration des graphiques
+    document.addEventListener('DOMContentLoaded', function() {
+        // Graphique en secteurs
+        const tasksCtx = document.getElementById('tasksChart');
+        if (tasksCtx) {
+            new Chart(tasksCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['En attente', 'En cours', 'Terminées'],
+                    datasets: [{
+                        data: [@pendingCount, @inProgressCount, @completedCount],
+                        backgroundColor: ['#ffc107', '#17a2b8', '#28a745'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Graphique de progression
+        const progressCtx = document.getElementById('progressChart');
+        if (progressCtx) {
+            new Chart(progressCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Progression'],
+                    datasets: [{
+                        label: 'Terminées',
+                        data: [@completedCount],
+                        backgroundColor: '#28a745'
+                    }, {
+                        label: 'En cours',
+                        data: [@inProgressCount],
+                        backgroundColor: '#17a2b8'
+                    }, {
+                        label: 'En attente',
+                        data: [@pendingCount],
+                        backgroundColor: '#ffc107'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    // Filtrage des tâches
+    function filterTasks() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const priorityFilter = document.getElementById('priorityFilter').value;
+        const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+        
+        const tasks = document.querySelectorAll('.task-item');
+        
+        tasks.forEach(task => {
+            const status = task.getAttribute('data-status');
+            const priority = task.getAttribute('data-priority');
+            const text = task.textContent.toLowerCase();
+            
+            const matchStatus = !statusFilter || status === statusFilter;
+            const matchPriority = !priorityFilter || priority === priorityFilter;
+            const matchSearch = !searchFilter || text.includes(searchFilter);
+            
+            task.style.display = matchStatus && matchPriority && matchSearch ? 'block' : 'none';
+        });
+    }
+
+    // Event listeners pour les filtres
+    document.getElementById('statusFilter').addEventListener('change', filterTasks);
+    document.getElementById('priorityFilter').addEventListener('change', filterTasks);
+    document.getElementById('searchFilter').addEventListener('input', filterTasks);
+
+    function clearFilters() {
+        document.getElementById('statusFilter').value = '';
+        document.getElementById('priorityFilter').value = '';
+        document.getElementById('searchFilter').value = '';
+        filterTasks();
+    }
+
+    function refreshTasks() {
+        location.reload();
+    }
+
+    function exportTasks() {
+        // Implémentation de l'export Excel
+        alert('Fonctionnalité d\\'export en cours de développement');
+    }
+
+    // Actions sur les tâches
+    function viewTask(taskId) {
+        alert('Voir tâche ' + taskId);
+    }
+
+    function assignTask(taskId) {
+        alert('Assigner tâche ' + taskId);
+    }
+
+    function startTask(taskId) {
+        if (confirm('Commencer cette tâche ?')) {
+            // Appel AJAX pour mettre à jour le statut
+            alert('Tâche ' + taskId + ' démarrée');
+        }
+    }
+
+    function completeTask(taskId) {
+        if (confirm('Marquer cette tâche comme terminée ?')) {
+            // Appel AJAX pour marquer comme terminée
+            alert('Tâche ' + taskId + ' terminée');
+        }
+    }
+
+    function deleteTask(taskId) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
+            // Appel AJAX pour supprimer
+            alert('Tâche ' + taskId + ' supprimée');
+        }
+    }
+</script>

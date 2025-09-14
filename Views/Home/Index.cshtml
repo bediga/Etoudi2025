@@ -1,0 +1,68 @@
+﻿@{
+    ViewData["Title"] = "Système de Gestion Électorale";
+}
+
+<div class="text-center">
+    <h1 class="display-4">
+        <i class="fas fa-vote-yea text-primary"></i>
+        Système de Gestion Électorale
+    </h1>
+    <p class="lead">Etoudi 2025</p>
+    
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-tachometer-alt fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Tableau de Bord</h5>
+                    <p class="card-text">Visualisez les statistiques et l'état global du système électoral.</p>
+                    <a asp-controller="Election" asp-action="Dashboard" class="btn btn-primary">
+                        Accéder au Tableau de Bord
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Gestion des Candidats</h5>
+                    <p class="card-text">Interface riche Syncfusion pour gérer les candidats et leurs informations.</p>
+                    <a asp-controller="Election" asp-action="Candidates" class="btn btn-success">
+                        Gérer les Candidats
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-database fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Base de Données</h5>
+                    <p class="card-text">PostgreSQL avec Entity Framework Core pour la gestion des données.</p>
+                    <a href="#" class="btn btn-info">
+                        Voir les Données
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading">
+                    <i class="fas fa-info-circle"></i> Technologies Utilisées
+                </h4>
+                <p class="mb-2"><strong>.NET 8</strong> - Framework moderne et performant</p>
+                <p class="mb-2"><strong>ASP.NET Core MVC</strong> - Architecture web robuste</p>
+                <p class="mb-2"><strong>Blazor Server</strong> - Composants interactifs côté serveur</p>
+                <p class="mb-2"><strong>Syncfusion</strong> - Bibliothèque d'interface utilisateur riche</p>
+                <p class="mb-2"><strong>Entity Framework Core</strong> - ORM pour .NET</p>
+                <p class="mb-0"><strong>PostgreSQL</strong> - Base de données relationnelle avancée</p>
+            </div>
+        </div>
+    </div>
+</div>

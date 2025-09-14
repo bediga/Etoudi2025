@@ -1,0 +1,442 @@
+@model VcBlazor.Data.Entities.HourlyTurnout
+
+@{
+    ViewData["Title"] = "Détails Affluence - ETOUDI 2025";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- En-tête -->
+            <div class="d-flex align-items-center mb-4">
+                <a asp-action="Index" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="flex-grow-1">
+                    <h2 class="h3 mb-1">
+                        <i class="fas fa-chart-line text-primary"></i>
+                        Détails du Relevé d'Affluence
+                    </h2>
+                    <p class="text-muted mb-0">Informations complètes du relevé horaire</p>
+                </div>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary me-2">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger"
+                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce relevé ?')">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Informations principales -->
+                <div class="col-lg-8">
+                    <!-- Données du relevé -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Informations du Relevé
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Bureau de Vote
+                                    </label>
+                                    @if (Model.PollingStation != null)
+                                    {
+                                        <p class="fs-5 fw-semibold text-dark">@Model.PollingStation.Name</p>
+                                        <small class="text-muted">
+                                            ID: @Model.PollingStationId
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <p class="fs-5 fw-semibold text-dark">Bureau #@Model.PollingStationId</p>
+                                        <small class="text-muted">Bureau non trouvé</small>
+                                    }
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-clock me-2"></i>Créneau Horaire
+                                    </label>
+                                    <p class="fs-5">
+                                        <span class="badge bg-info fs-6">@Model.Hour:00 - @(Model.Hour + 1):00</span>
+                                    </p>
+                                    <small class="text-muted">
+                                        @switch (Model.Hour)
+                                        {
+                                            case 7: 
+                                                <text><i class="fas fa-sunrise me-1"></i>Ouverture</text>
+                                                break;
+                                            case >= 12 and <= 14:
+                                                <text><i class="fas fa-utensils me-1"></i>Période déjeuner</text>
+                                                break;
+                                            case >= 17:
+                                                <text><i class="fas fa-sunset me-1"></i>Période de fermeture</text>
+                                                break;
+                                            default:
+                                                <text><i class="fas fa-clock me-1"></i>Période normale</text>
+                                                break;
+                                        }
+                                    </small>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-users me-2"></i>Votants (Cette Heure)
+                                    </label>
+                                    <p class="fs-4 fw-bold text-primary mb-1">@Model.VotersCount.ToString("N0")</p>
+                                    <small class="text-muted">Nouveaux votants sur ce créneau</small>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-chart-line me-2"></i>Total Cumulé
+                                    </label>
+                                    <p class="fs-4 fw-bold text-success mb-1">@Model.CumulativeCount.ToString("N0")</p>
+                                    <small class="text-muted">Total depuis l'ouverture</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analyse de participation -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-percentage me-2"></i>Analyse de la Participation
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center mb-4">
+                                <div class="col-md-4">
+                                    <div class="border rounded p-4 h-100">
+                                        @{
+                                            var turnoutColor = Model.TurnoutRate switch
+                                            {
+                                                >= 70 => "text-success",
+                                                >= 50 => "text-warning",
+                                                >= 25 => "text-info", 
+                                                _ => "text-danger"
+                                            };
+                                            var turnoutIcon = Model.TurnoutRate switch
+                                            {
+                                                >= 70 => "fa-arrow-up",
+                                                >= 50 => "fa-minus",
+                                                >= 25 => "fa-chart-line",
+                                                _ => "fa-arrow-down"
+                                            };
+                                        }
+                                        <i class="fas @turnoutIcon fa-3x @turnoutColor mb-3"></i>
+                                        <h2 class="@turnoutColor mb-1">@Model.TurnoutRate.ToString("F1")%</h2>
+                                        <p class="text-muted mb-0">Taux de Participation</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-4 h-100">
+                                        <i class="fas fa-clock fa-3x text-primary mb-3"></i>
+                                        @{
+                                            var hourlyRate = Model.CumulativeCount > 0 ? 
+                                                (Model.VotersCount * 100.0 / Model.CumulativeCount) : 0;
+                                        }
+                                        <h2 class="text-primary mb-1">@hourlyRate.ToString("F1")%</h2>
+                                        <p class="text-muted mb-0">Part de Cette Heure</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-4 h-100">
+                                        <i class="fas fa-trendline fa-3x text-info mb-3"></i>
+                                        @{
+                                            var avgPerHour = Model.Hour > 0 ? Model.CumulativeCount / (Model.Hour - 6.0) : 0;
+                                        }
+                                        <h2 class="text-info mb-1">@avgPerHour.ToString("F0")</h2>
+                                        <p class="text-muted mb-0">Moyenne/Heure</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Barre de progression détaillée -->
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label mb-0">Progression de la Participation</label>
+                                    <span class="badge bg-secondary">
+                                        @Model.CumulativeCount votes comptabilisés
+                                    </span>
+                                </div>
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar @(Model.TurnoutRate >= 70 ? "bg-success" : Model.TurnoutRate >= 50 ? "bg-warning" : "bg-danger")" 
+                                         role="progressbar" 
+                                         style="width: @Math.Min(Model.TurnoutRate, 100).ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%"
+                                         aria-valuenow="@Model.TurnoutRate" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        @Model.TurnoutRate.ToString("F1")%
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <small class="text-muted">0%</small>
+                                    <small class="text-muted">25%</small>
+                                    <small class="text-muted">50%</small>
+                                    <small class="text-muted">75%</small>
+                                    <small class="text-muted">100%</small>
+                                </div>
+                            </div>
+
+                            <!-- Évaluation qualitative -->
+                            <div class="alert alert-@(Model.TurnoutRate >= 70 ? "success" : Model.TurnoutRate >= 50 ? "warning" : "danger") border-0" role="alert">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas @(Model.TurnoutRate >= 70 ? "fa-check-circle" : Model.TurnoutRate >= 50 ? "fa-exclamation-triangle" : "fa-times-circle") fa-2x me-3"></i>
+                                    <div>
+                                        <h5 class="alert-heading mb-1">
+                                            @switch (Model.TurnoutRate)
+                                            {
+                                                case >= 70:
+                                                    <text>Excellente Participation</text>
+                                                    break;
+                                                case >= 50:
+                                                    <text>Participation Satisfaisante</text>
+                                                    break;
+                                                case >= 25:
+                                                    <text>Participation Modérée</text>
+                                                    break;
+                                                default:
+                                                    <text>Participation Faible</text>
+                                                    break;
+                                            }
+                                        </h5>
+                                        <p class="mb-0">
+                                            @switch (Model.TurnoutRate)
+                                            {
+                                                case >= 70:
+                                                    <text>Le taux de participation est très élevé pour cette heure. Excellente mobilisation électorale.</text>
+                                                    break;
+                                                case >= 50:
+                                                    <text>Le taux de participation est dans la moyenne acceptable. Mobilisation correcte.</text>
+                                                    break;
+                                                case >= 25:
+                                                    <text>Le taux de participation est modéré. Une amélioration est possible.</text>
+                                                    break;
+                                                default:
+                                                    <text>Le taux de participation est faible. Vérifiez les conditions ou encouragez la participation.</text>
+                                                    break;
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Historique et metadata -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-history me-2"></i>Informations d'Enregistrement
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-user me-2"></i>Enregistré par
+                                    </label>
+                                    @if (Model.RecordedByUser != null)
+                                    {
+                                        <p class="text-dark">@Model.RecordedByUser.FirstName @Model.RecordedByUser.LastName</p>
+                                        <small class="text-muted">ID: @Model.RecordedBy</small>
+                                    }
+                                    else if (Model.RecordedBy.HasValue)
+                                    {
+                                        <p class="text-dark">Utilisateur #@Model.RecordedBy</p>
+                                        <small class="text-muted">Utilisateur non trouvé</small>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted fst-italic">Non spécifié</p>
+                                    }
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-calendar me-2"></i>Date et Heure d'Enregistrement
+                                    </label>
+                                    <p class="text-dark">@Model.RecordedAt.ToString("dd/MM/yyyy HH:mm:ss")</p>
+                                    <small class="text-muted">
+                                        @{
+                                            var timeAgo = DateTime.UtcNow - Model.RecordedAt;
+                                            var timeAgoText = timeAgo.TotalDays >= 1 ? 
+                                                $"Il y a {(int)timeAgo.TotalDays} jour(s)" :
+                                                timeAgo.TotalHours >= 1 ? 
+                                                    $"Il y a {(int)timeAgo.TotalHours} heure(s)" :
+                                                    $"Il y a {(int)timeAgo.TotalMinutes} minute(s)";
+                                        }
+                                        @timeAgoText
+                                    </small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label text-muted">
+                                        <i class="fas fa-key me-2"></i>ID du Relevé
+                                    </label>
+                                    <p class="text-dark font-monospace">@Model.Id</p>
+                                    <small class="text-muted">Identifiant système unique</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panneau latéral -->
+                <div class="col-lg-4">
+                    <!-- Actions rapides -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="fas fa-bolt me-2"></i>Actions Rapides
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a asp-action="Edit" asp-route-id="@Model.Id" 
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-edit me-2"></i>Modifier ce Relevé
+                                </a>
+                                <a asp-controller="PollingStation" asp-action="Details" asp-route-id="@Model.PollingStationId" 
+                                   class="btn btn-outline-info">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Voir le Bureau
+                                </a>
+                                <a asp-action="Create" 
+                                   class="btn btn-outline-success">
+                                    <i class="fas fa-plus me-2"></i>Nouveau Relevé
+                                </a>
+                                <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+                                    <i class="fas fa-print me-2"></i>Imprimer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistiques contextuelles -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>Contexte Statistique
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Efficacité Horaire</small>
+                                <div class="d-flex justify-content-between">
+                                    <span>Votants/Heure :</span>
+                                    <strong>@Model.VotersCount</strong>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Performance Relative</small>
+                                <div class="d-flex justify-content-between">
+                                    <span>Part du Total :</span>
+                                    <strong>@hourlyRate.ToString("F1")%</strong>
+                                </div>
+                            </div>
+
+                            @if (Model.Hour >= 8)
+                            {
+                                <div class="mb-3">
+                                    <small class="text-muted d-block">Cadence Moyenne</small>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Votes/Heure :</span>
+                                        <strong>@avgPerHour.ToString("F0")</strong>
+                                    </div>
+                                </div>
+                            }
+
+                            <hr>
+                            <div class="text-center">
+                                <small class="text-muted">
+                                    Données enregistrées à @Model.Hour:@Model.RecordedAt.Minute.ToString("D2")
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alertes et recommandations -->
+                    @if (Model.TurnoutRate < 25)
+                    {
+                        <div class="card border-warning shadow-sm">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Recommandations
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="small mb-0">
+                                    <li>Vérifier l'accessibilité du bureau</li>
+                                    <li>Contrôler les horaires d'ouverture</li>
+                                    <li>Sensibiliser la population locale</li>
+                                    <li>Examiner les conditions météo</li>
+                                </ul>
+                            </div>
+                        </div>
+                    }
+                    @if (Model.TurnoutRate >= 70)
+                    {
+                        <div class="card border-success shadow-sm">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-thumbs-up me-2"></i>Félicitations
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="small mb-0">
+                                    Excellente participation ! Ce bureau présente un taux de participation 
+                                    exemplaire qui témoigne d'une bonne organisation et mobilisation.
+                                </p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    .card-header {
+        border-bottom: none;
+        font-weight: 600;
+    }
+    
+    .progress {
+        border-radius: 0.5rem;
+    }
+    
+    .progress-bar {
+        font-weight: 600;
+        line-height: 25px;
+    }
+    
+    .font-monospace {
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+    }
+    
+    @@media print {
+        .btn, .card-header .fas {
+            display: none !important;
+        }
+        
+        .card {
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+        }
+    }
+</style>

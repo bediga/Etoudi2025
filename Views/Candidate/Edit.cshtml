@@ -1,0 +1,398 @@
+@model VcBlazor.Data.Entities.Candidate
+
+@{
+    ViewData["Title"] = "Modifier Candidat - ETOUDI 2025";
+}
+
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-gradient-warning text-dark">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="h3 mb-2">
+                                <i class="fas fa-edit me-2"></i>
+                                Modifier le Candidat
+                            </h1>
+                            <p class="mb-0 opacity-80">
+                                <strong>@Model.FirstName @Model.LastName</strong> - Modification du profil
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group">
+                                <a href="@Url.Action("Details", new { id = Model.Id })" class="btn btn-info">
+                                    <i class="fas fa-eye me-1"></i>
+                                    Voir détails
+                                </a>
+                                <a href="@Url.Action("Index")" class="btn btn-dark">
+                                    <i class="fas fa-arrow-left me-1"></i>
+                                    Retour
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire de modification -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Modification du profil candidat
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data" novalidate>
+                        <input asp-for="Id" type="hidden" />
+                        <input asp-for="CreatedAt" type="hidden" />
+                        <input asp-for="TotalVotes" type="hidden" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none"></div>
+                        
+                        <!-- Informations personnelles -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-user me-2"></i>
+                                    Informations personnelles
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FirstName" class="form-label fw-bold">
+                                    <i class="fas fa-user me-1"></i>
+                                    Prénom *
+                                </label>
+                                <input asp-for="FirstName" class="form-control form-control-lg" 
+                                       placeholder="Prénom du candidat" />
+                                <span asp-validation-for="FirstName" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="LastName" class="form-label fw-bold">
+                                    <i class="fas fa-user me-1"></i>
+                                    Nom de famille *
+                                </label>
+                                <input asp-for="LastName" class="form-control form-control-lg" 
+                                       placeholder="Nom de famille du candidat" />
+                                <span asp-validation-for="LastName" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Party" class="form-label fw-bold">
+                                    <i class="fas fa-flag me-1"></i>
+                                    Parti politique *
+                                </label>
+                                <input asp-for="Party" class="form-control form-control-lg" 
+                                       placeholder="Ex: RDPC, SDF, UDC..." />
+                                <span asp-validation-for="Party" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Age" class="form-label fw-bold">
+                                    <i class="fas fa-birthday-cake me-1"></i>
+                                    Âge
+                                </label>
+                                <input asp-for="Age" type="number" class="form-control form-control-lg" 
+                                       placeholder="Âge du candidat" min="18" max="120" />
+                                <span asp-validation-for="Age" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Profession" class="form-label fw-bold">
+                                    <i class="fas fa-briefcase me-1"></i>
+                                    Profession
+                                </label>
+                                <input asp-for="Profession" class="form-control form-control-lg" 
+                                       placeholder="Profession actuelle" />
+                                <span asp-validation-for="Profession" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Education" class="form-label fw-bold">
+                                    <i class="fas fa-graduation-cap me-1"></i>
+                                    Formation
+                                </label>
+                                <input asp-for="Education" class="form-control form-control-lg" 
+                                       placeholder="Formation académique" />
+                                <span asp-validation-for="Education" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label asp-for="Experience" class="form-label fw-bold">
+                                    <i class="fas fa-star me-1"></i>
+                                    Expérience professionnelle
+                                </label>
+                                <textarea asp-for="Experience" class="form-control" rows="3"
+                                          placeholder="Expériences professionnelles et politiques significatives..."></textarea>
+                                <span asp-validation-for="Experience" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Programme électoral -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-scroll me-2"></i>
+                                    Programme électoral
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label asp-for="Program" class="form-label fw-bold">
+                                    <i class="fas fa-scroll me-1"></i>
+                                    Programme et propositions
+                                </label>
+                                <textarea asp-for="Program" class="form-control" rows="6"
+                                          placeholder="Programme électoral détaillé, propositions et engagements..."></textarea>
+                                <span asp-validation-for="Program" class="text-danger"></span>
+                                <div class="form-text">
+                                    <i class="fas fa-lightbulb me-1"></i>
+                                    Décrivez votre programme, vos propositions et engagements électoraux
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Photo -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-camera me-2"></i>
+                                    Photo de campagne
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="Photo" class="form-label fw-bold">
+                                    <i class="fas fa-image me-1"></i>
+                                    URL de la photo
+                                </label>
+                                <input asp-for="Photo" type="url" class="form-control form-control-lg" 
+                                       placeholder="https://exemple.com/photo.jpg" />
+                                <span asp-validation-for="Photo" class="text-danger"></span>
+                                <div class="form-text">URL de la photo officielle du candidat</div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-flag me-1"></i>
+                                    Statut
+                                </label>
+                                <div class="form-check form-switch">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox" 
+                                           role="switch" id="isActiveSwitch" />
+                                    <label class="form-check-label fw-bold" for="isActiveSwitch">
+                                        Candidat actif
+                                    </label>
+                                </div>
+                                <span asp-validation-for="IsActive" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Coordonnées -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-address-book me-2"></i>
+                                    Coordonnées
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Email" class="form-label fw-bold">
+                                    <i class="fas fa-envelope me-1"></i>
+                                    Email
+                                </label>
+                                <input asp-for="Email" type="email" class="form-control form-control-lg" 
+                                       placeholder="email@exemple.com" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Phone" class="form-label fw-bold">
+                                    <i class="fas fa-phone me-1"></i>
+                                    Téléphone
+                                </label>
+                                <input asp-for="Phone" type="tel" class="form-control form-control-lg" 
+                                       placeholder="+237 6XX XX XX XX" />
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Website" class="form-label fw-bold">
+                                    <i class="fas fa-globe me-1"></i>
+                                    Site web
+                                </label>
+                                <input asp-for="Website" type="url" class="form-control form-control-lg" 
+                                       placeholder="https://www.site-candidat.com" />
+                                <span asp-validation-for="Website" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Métadonnées (lecture seule) -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-muted mb-3">
+                                    <i class="fas fa-clock me-2"></i>
+                                    Informations système (lecture seule)
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold text-muted">
+                                    <i class="fas fa-hashtag me-1"></i>
+                                    ID du candidat
+                                </label>
+                                <input type="text" class="form-control" value="@Model.Id" readonly />
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold text-muted">
+                                    <i class="fas fa-chart-bar me-1"></i>
+                                    Total des votes
+                                </label>
+                                <input type="text" class="form-control" value="@Model.TotalVotes.ToString("N0")" readonly />
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold text-muted">
+                                    <i class="fas fa-plus-circle me-1"></i>
+                                    Date de création
+                                </label>
+                                <input type="text" class="form-control" 
+                                       value="@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")" readonly />
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <hr class="my-4">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="text-muted">
+                                        <i class="fas fa-asterisk text-danger me-1" style="font-size: 0.7em;"></i>
+                                        Champs obligatoires
+                                    </div>
+                                    <div>
+                                        <a href="@Url.Action("Details", new { id = Model.Id })" 
+                                           class="btn btn-outline-secondary btn-lg me-2">
+                                            <i class="fas fa-times me-2"></i>
+                                            Annuler
+                                        </a>
+                                        <button type="submit" class="btn btn-warning btn-lg">
+                                            <i class="fas fa-save me-2"></i>
+                                            Enregistrer les modifications
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Validation Scripts -->
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Animation pour le focus des champs
+        $(document).ready(function() {
+            $('.form-control, .form-select').on('focus', function() {
+                if (!$(this).prop('readonly')) {
+                    $(this).parent().find('.form-label').addClass('text-primary');
+                }
+            }).on('blur', function() {
+                $(this).parent().find('.form-label').removeClass('text-primary');
+            });
+
+            // Validation en temps réel
+            $('#FirstName, #LastName, #Party').on('input', function() {
+                var value = $(this).val().trim();
+                if (value.length > 0) {
+                    $(this).removeClass('is-invalid').addClass('is-valid');
+                } else {
+                    $(this).removeClass('is-valid').addClass('is-invalid');
+                }
+            });
+
+            // Validation de l'âge
+            $('#Age').on('input', function() {
+                var value = parseInt($(this).val());
+                if (!isNaN(value) && value >= 18 && value <= 120) {
+                    $(this).removeClass('is-invalid').addClass('is-valid');
+                } else if ($(this).val() !== '') {
+                    $(this).removeClass('is-valid').addClass('is-invalid');
+                } else {
+                    $(this).removeClass('is-valid is-invalid');
+                }
+            });
+
+            // Validation de l'email
+            $('#Email').on('input', function() {
+                var email = $(this).val();
+                var emailRegex = /^[^\\s@@]+@@[^\\s@@]+\\.[^\\s@@]+$/;
+                if (email === '' || emailRegex.test(email)) {
+                    $(this).removeClass('is-invalid').addClass('is-valid');
+                } else {
+                    $(this).removeClass('is-valid').addClass('is-invalid');
+                }
+            });
+
+            // Confirmation avant sauvegarde
+            $('form').on('submit', function(e) {
+                if (confirm('Êtes-vous sûr de vouloir enregistrer ces modifications ?')) {
+                    return true;
+                } else {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+    </script>
+}
+
+<style>
+    .form-control:focus, .form-select:focus {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    }
+    
+    .form-label {
+        transition: color 0.2s ease;
+    }
+    
+    .bg-gradient-warning {
+        background: linear-gradient(45deg, #ffc107, #ffb300);
+    }
+    
+    .form-control[readonly] {
+        background-color: #f8f9fa;
+        opacity: 0.8;
+    }
+    
+    .form-check-input:checked {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+</style>

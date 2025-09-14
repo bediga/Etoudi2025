@@ -1,0 +1,313 @@
+@model IEnumerable<VcBlazor.Data.Entities.Candidate>
+
+@{
+    ViewData["Title"] = "Gestion des Candidats";
+    var totalCandidates = Model?.Count() ?? 0;
+    var activeCandidates = Model?.Count(c => c.IsActive) ?? 0;
+    var inactiveCandidates = totalCandidates - activeCandidates;
+    var totalVotes = Model?.Sum(c => c.TotalVotes) ?? 0;
+}
+
+<style>
+    .candidate-card { transition: transform 0.2s; }
+    .candidate-card:hover { transform: translateY(-2px); }
+    .candidate-photo { width: 80px; height: 80px; object-fit: cover; }
+    .party-badge { font-size: 0.8em; }
+</style>
+
+<div class="container-fluid">
+    <!-- En-tête avec statistiques -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h4 mb-0">
+                    <i class="fas fa-users text-primary me-2"></i>
+                    Candidats ETOUDI 2025
+                </h2>
+                <a href="/Candidate/Create" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    Nouveau Candidat
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques globales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h3 class="mb-0">@totalCandidates</h3>
+                    <small>Total Candidats</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-check fa-2x mb-2"></i>
+                    <h3 class="mb-0">@activeCandidates</h3>
+                    <small>Actifs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-times fa-2x mb-2"></i>
+                    <h3 class="mb-0">@inactiveCandidates</h3>
+                    <small>Inactifs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-vote-yea fa-2x mb-2"></i>
+                    <h3 class="mb-0">@totalVotes.ToString("N0")</h3>
+                    <small>Total Votes</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Recherche</label>
+                            <input type="text" id="searchFilter" class="form-control" placeholder="Nom, prénom ou parti...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Parti Politique</label>
+                            <select id="partyFilter" class="form-select">
+                                <option value="">Tous les partis</option>
+                                @if (Model != null)
+                                {
+                                    var parties = Model.Select(c => c.Party).Distinct().OrderBy(p => p);
+                                    foreach (var party in parties)
+                                    {
+                                        <option value="@party">@party</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Statut</label>
+                            <select id="statusFilter" class="form-select">
+                                <option value="">Tous</option>
+                                <option value="true">Actif</option>
+                                <option value="false">Inactif</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-outline-secondary me-2" onclick="clearFilters()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <button class="btn btn-primary" onclick="exportCandidates()">
+                                <i class="fas fa-download me-2"></i>Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des candidats -->
+    <div class="row">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var candidate in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4 candidate-item" 
+                     data-party="@candidate.Party" 
+                     data-active="@candidate.IsActive.ToString().ToLower()"
+                     data-search="@($"{candidate.FirstName} {candidate.LastName} {candidate.Party}".ToLower())">
+                    <div class="card candidate-card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start mb-3">
+                                <!-- Photo du candidat -->
+                                <div class="me-3">
+                                    @if (!string.IsNullOrEmpty(candidate.Photo))
+                                    {
+                                        <img src="@candidate.Photo" alt="@candidate.FirstName @candidate.LastName" 
+                                             class="rounded-circle candidate-photo border">
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded-circle candidate-photo border d-flex align-items-center justify-content-center bg-light">
+                                            <i class="fas fa-user fa-2x text-muted"></i>
+                                        </div>
+                                    }
+                                </div>
+                                
+                                <!-- Informations candidat -->
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-1">@candidate.FirstName @candidate.LastName</h5>
+                                    
+                                    @if (!string.IsNullOrEmpty(candidate.Party))
+                                    {
+                                        <span class="badge bg-primary party-badge mb-2">@candidate.Party</span>
+                                    }
+                                    
+                                    @if (candidate.Age.HasValue)
+                                    {
+                                        <p class="text-muted small mb-1">
+                                            <i class="fas fa-birthday-cake me-1"></i>@candidate.Age ans
+                                        </p>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(candidate.Profession))
+                                    {
+                                        <p class="text-muted small mb-1">
+                                            <i class="fas fa-briefcase me-1"></i>@candidate.Profession
+                                        </p>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(candidate.Email))
+                                    {
+                                        <p class="text-muted small mb-1">
+                                            <i class="fas fa-envelope me-1"></i>@candidate.Email
+                                        </p>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(candidate.Phone))
+                                    {
+                                        <p class="text-muted small mb-1">
+                                            <i class="fas fa-phone me-1"></i>@candidate.Phone
+                                        </p>
+                                    }
+                                </div>
+                                
+                                <!-- Statut -->
+                                <div>
+                                    @if (candidate.IsActive)
+                                    {
+                                        <span class="badge bg-success">Actif</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactif</span>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(candidate.Program))
+                            {
+                                <div class="mb-3">
+                                    <h6 class="small text-muted mb-1">Programme :</h6>
+                                    <p class="small">@(candidate.Program.Length > 120 ? candidate.Program.Substring(0, 120) + "..." : candidate.Program)</p>
+                                </div>
+                            }
+
+                            <!-- Statistiques de votes -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="text-center">
+                                    <h6 class="mb-0 text-primary">@candidate.TotalVotes.ToString("N0")</h6>
+                                    <small class="text-muted">Votes</small>
+                                </div>
+                                <div class="text-center">
+                                    <h6 class="mb-0 text-info">@candidate.CreatedAt.ToString("dd/MM/yyyy")</h6>
+                                    <small class="text-muted">Inscription</small>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="d-flex gap-2">
+                                <a href="/Candidate/Details/@candidate.Id" class="btn btn-sm btn-outline-primary flex-fill">
+                                    <i class="fas fa-eye me-1"></i>Voir
+                                </a>
+                                <a href="/Candidate/Edit/@candidate.Id" class="btn btn-sm btn-outline-warning flex-fill">
+                                    <i class="fas fa-edit me-1"></i>Modifier
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCandidate(@candidate.Id)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h5>Aucun candidat enregistré</h5>
+                    <p class="text-muted">Commencez par ajouter des candidats pour les élections ETOUDI 2025.</p>
+                    <a href="/Candidate/Create" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Ajouter un candidat
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    // Filtrage des candidats
+    function filterCandidates() {
+        const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+        const partyFilter = document.getElementById('partyFilter').value;
+        const statusFilter = document.getElementById('statusFilter').value;
+        
+        const candidates = document.querySelectorAll('.candidate-item');
+        
+        candidates.forEach(candidate => {
+            const party = candidate.getAttribute('data-party');
+            const isActive = candidate.getAttribute('data-active');
+            const searchText = candidate.getAttribute('data-search');
+            
+            const matchSearch = !searchFilter || searchText.includes(searchFilter);
+            const matchParty = !partyFilter || party === partyFilter;
+            const matchStatus = !statusFilter || isActive === statusFilter;
+            
+            candidate.style.display = matchSearch && matchParty && matchStatus ? 'block' : 'none';
+        });
+    }
+
+    // Event listeners pour les filtres
+    document.getElementById('searchFilter').addEventListener('input', filterCandidates);
+    document.getElementById('partyFilter').addEventListener('change', filterCandidates);
+    document.getElementById('statusFilter').addEventListener('change', filterCandidates);
+
+    function clearFilters() {
+        document.getElementById('searchFilter').value = '';
+        document.getElementById('partyFilter').value = '';
+        document.getElementById('statusFilter').value = '';
+        filterCandidates();
+    }
+
+    function exportCandidates() {
+        // Implémentation de l'export Excel
+        alert('Fonctionnalité d\\'export en cours de développement');
+    }
+
+    function deleteCandidate(candidateId) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer ce candidat ?')) {
+            // Appel AJAX pour supprimer
+            fetch(`/Candidate/Delete/${candidateId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Erreur lors de la suppression');
+                }
+            })
+            .catch(error => {
+                alert('Erreur: ' + error.message);
+            });
+        }
+    }
+</script>

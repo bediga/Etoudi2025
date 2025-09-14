@@ -1,0 +1,244 @@
+@model VcBlazor.Data.Entities.PollingStationHierarchy
+
+@{
+    ViewData["Title"] = "Nouveau Bureau de Vote - ETOUDI 2025";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- En-tête -->
+            <div class="d-flex align-items-center mb-4">
+                <a asp-action="Index" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h2 class="h3 mb-1">
+                        <i class="fas fa-sitemap text-primary"></i>
+                        Nouveau Bureau de Vote
+                    </h2>
+                    <p class="text-muted mb-0">Ajout d'un nouveau bureau dans la hiérarchie électorale</p>
+                </div>
+            </div>
+
+            <!-- Formulaire -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none"></div>
+                        
+                        <div class="row">
+                            <!-- Informations de base -->
+                            <div class="col-md-12 mb-4">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Informations Générales
+                                </h5>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Name" class="form-label">
+                                        <i class="fas fa-sitemap me-2"></i>Nom du Bureau *
+                                    </label>
+                                    <input asp-for="Name" class="form-control" placeholder="Ex: Bureau de Vote N°1 - Centre" required />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="VotingCenterId" class="form-label">
+                                        <i class="fas fa-warehouse me-2"></i>Centre de Vote *
+                                    </label>
+                                    <select asp-for="VotingCenterId" class="form-select" asp-items="ViewBag.VotingCenterId" required>
+                                        <option value="">-- Sélectionner un centre de vote --</option>
+                                    </select>
+                                    <span asp-validation-for="VotingCenterId" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="StationNumber" class="form-label">
+                                        <i class="fas fa-hashtag me-2"></i>Numéro du Bureau *
+                                    </label>
+                                    <input asp-for="StationNumber" type="number" class="form-control" min="1" placeholder="1" required />
+                                    <div class="form-text">Numéro unique du bureau dans le centre de vote</div>
+                                    <span asp-validation-for="StationNumber" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Status" class="form-label">
+                                        <i class="fas fa-info-circle me-2"></i>Statut
+                                    </label>
+                                    <select asp-for="Status" class="form-select">
+                                        <option value="pending">En attente</option>
+                                        <option value="active">Actif</option>
+                                        <option value="closed">Fermé</option>
+                                    </select>
+                                    <span asp-validation-for="Status" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <!-- Données électorales -->
+                            <div class="col-md-12 mb-4">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-users me-2"></i>Données Électorales
+                                </h5>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="RegisteredVoters" class="form-label">
+                                        <i class="fas fa-user-plus me-2"></i>Électeurs Inscrits
+                                    </label>
+                                    <input asp-for="RegisteredVoters" type="number" class="form-control" min="0" placeholder="0" />
+                                    <div class="form-text">Nombre d'électeurs inscrits dans ce bureau</div>
+                                    <span asp-validation-for="RegisteredVoters" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="VotesSubmitted" class="form-label">
+                                        <i class="fas fa-vote-yea me-2"></i>Votes Soumis
+                                    </label>
+                                    <input asp-for="VotesSubmitted" type="number" class="form-control" min="0" placeholder="0" />
+                                    <div class="form-text">Nombre de votes actuellement soumis</div>
+                                    <span asp-validation-for="VotesSubmitted" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <!-- Informations calculées -->
+                            <div class="col-md-12 mb-4">
+                                <div class="card bg-light border-0">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-3">
+                                            <i class="fas fa-calculator me-2"></i>Calculs Automatiques
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-percent text-primary me-2"></i>
+                                                    <span class="text-muted">Taux de Participation:</span>
+                                                    <strong class="ms-2" id="turnoutRate">0.0%</strong>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-clock text-info me-2"></i>
+                                                    <span class="text-muted">Dernière MAJ:</span>
+                                                    <strong class="ms-2">En cours...</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Créer le Bureau
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Calcul automatique du taux de participation
+        document.addEventListener('DOMContentLoaded', function() {
+            const registeredInput = document.querySelector('input[name="RegisteredVoters"]');
+            const votesInput = document.querySelector('input[name="VotesSubmitted"]');
+            const turnoutDisplay = document.getElementById('turnoutRate');
+            
+            function calculateTurnout() {
+                const registered = parseInt(registeredInput.value) || 0;
+                const votes = parseInt(votesInput.value) || 0;
+                
+                if (registered > 0) {
+                    const turnout = (votes / registered * 100).toFixed(1);
+                    turnoutDisplay.textContent = turnout + '%';
+                    
+                    // Validation: les votes ne peuvent pas dépasser les inscrits
+                    if (votes > registered) {
+                        votesInput.setCustomValidity('Le nombre de votes ne peut pas dépasser le nombre d\'électeurs inscrits');
+                        turnoutDisplay.textContent = 'Erreur!';
+                        turnoutDisplay.className = 'ms-2 text-danger';
+                    } else {
+                        votesInput.setCustomValidity('');
+                        turnoutDisplay.className = 'ms-2';
+                    }
+                } else {
+                    turnoutDisplay.textContent = '0.0%';
+                }
+            }
+            
+            registeredInput.addEventListener('input', calculateTurnout);
+            votesInput.addEventListener('input', calculateTurnout);
+            
+            // Validation du numéro de bureau unique
+            const stationNumberInput = document.querySelector('input[name="StationNumber"]');
+            const centerSelect = document.querySelector('select[name="VotingCenterId"]');
+            
+            function validateStationNumber() {
+                // Cette validation pourrait être étendue pour vérifier l'unicité
+                // via un appel AJAX au serveur
+                const stationNumber = parseInt(stationNumberInput.value);
+                if (stationNumber && stationNumber < 1) {
+                    stationNumberInput.setCustomValidity('Le numéro de bureau doit être positif');
+                } else {
+                    stationNumberInput.setCustomValidity('');
+                }
+            }
+            
+            stationNumberInput.addEventListener('input', validateStationNumber);
+        });
+    </script>
+}
+
+<style>
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .form-control, .form-select {
+        border: 1px solid #ced4da;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .card {
+        transition: all 0.3s ease;
+    }
+    
+    .text-primary {
+        color: #0d6efd !important;
+    }
+    
+    h5 {
+        font-weight: 600;
+    }
+    
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+</style>

@@ -1,0 +1,492 @@
+@model VcBlazor.Data.Entities.ElectionResult
+
+@{
+    ViewData["Title"] = "Supprimer Résultat - ETOUDI 2025";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- En-tête -->
+            <div class="d-flex align-items-center mb-4">
+                <a asp-action="Index" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="flex-grow-1">
+                    <h2 class="h3 mb-1">
+                        <i class="fas fa-trash text-danger"></i>
+                        Supprimer le Résultat Électoral
+                    </h2>
+                    <p class="text-muted mb-0">
+                        @if (Model?.Candidate != null)
+                        {
+                            @($"Résultat de {Model.Candidate.FirstName} {Model.Candidate.LastName}")
+                        }
+                        else
+                        {
+                            @("Suppression définitive du résultat")
+                        }
+                    </p>
+                </div>
+                <a asp-action="Details" asp-route-id="@Model?.Id" class="btn btn-info">
+                    <i class="fas fa-eye me-2"></i>Voir Détails
+                </a>
+            </div>
+
+            <!-- Alerte de suppression -->
+            <div class="alert alert-danger border-0 shadow-sm mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                    <div>
+                        <h5 class="alert-heading mb-2">⚠️ Suppression Définitive</h5>
+                        <p class="mb-0">
+                            Cette action est <strong>irréversible</strong>. Le résultat électoral sera définitivement supprimé 
+                            de la base de données. Assurez-vous que cette suppression est justifiée.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Colonne principale -->
+                <div class="col-lg-8">
+                    <!-- Résumé du résultat à supprimer -->
+                    <div class="card border-danger shadow-sm mb-4">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>Résultat à Supprimer
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Score à supprimer -->
+                            <div class="row text-center mb-4">
+                                <div class="col-md-4">
+                                    <div class="border border-danger rounded-3 p-4 bg-light">
+                                        <i class="fas fa-vote-yea fa-3x text-danger mb-3"></i>
+                                        <h2 class="display-6 fw-bold text-danger mb-2">
+                                            @(Model?.Votes.ToString("N0") ?? "0")
+                                        </h2>
+                                        <p class="text-muted mb-0">Votes Obtenus</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border border-danger rounded-3 p-4 bg-light">
+                                        <i class="fas fa-chart-pie fa-3x text-danger mb-3"></i>
+                                        <h2 class="display-6 fw-bold text-danger mb-2">
+                                            @(Model?.TotalVotes.ToString("N0") ?? "0")
+                                        </h2>
+                                        <p class="text-muted mb-0">Total Exprimés</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border border-danger rounded-3 p-4 bg-light">
+                                        <i class="fas fa-percentage fa-3x text-danger mb-3"></i>
+                                        <h2 class="display-6 fw-bold text-danger mb-2">
+                                            @((Model?.Percentage ?? 0).ToString("F2"))%
+                                        </h2>
+                                        <p class="text-muted mb-0">Score Electoral</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Barre de progression à supprimer -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Performance à Supprimer</label>
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar bg-danger" 
+                                         role="progressbar" 
+                                         style="width: @((Model?.Percentage ?? 0).ToString("F2"))%"
+                                         aria-valuenow="@(Model?.Percentage ?? 0)" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        @((Model?.Percentage ?? 0).ToString("F2"))%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informations détaillées -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Informations Détaillées
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Candidat -->
+                                @if (Model?.Candidate != null)
+                                {
+                                    <div class="col-md-12 mb-4">
+                                        <div class="border rounded p-3 bg-light">
+                                            <h6 class="fw-bold mb-3">
+                                                <i class="fas fa-user-tie me-2"></i>Candidat Concerné
+                                            </h6>
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center me-3" 
+                                                     style="width: 60px; height: 60px;">
+                                                    <i class="fas fa-user fa-lg"></i>
+                                                </div>
+                                                <div>
+                                                    <h5 class="mb-1">@Model.Candidate.FirstName @Model.Candidate.LastName</h5>
+                                                    <p class="text-muted mb-1">
+                                                        <i class="fas fa-flag me-2"></i>@(Model.Candidate.Party ?? "Indépendant")
+                                                    </p>
+                                                    <p class="text-muted mb-0">
+                                                        <i class="fas fa-envelope me-2"></i>@(Model.Candidate.Email ?? "Email non renseigné")
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                <!-- Localisation -->
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Localisation
+                                    </h6>
+                                    @if (Model?.PollingStation != null)
+                                    {
+                                        <dl class="mb-0">
+                                            <dt>Bureau de Vote:</dt>
+                                            <dd class="mb-2">@Model.PollingStation.Name</dd>
+                                            
+                                            <dt>ID:</dt>
+                                            <dd class="mb-2"><code>@Model.PollingStation.Id</code></dd>
+                                            
+                                            @if (!string.IsNullOrEmpty(Model.PollingStation.Address))
+                                            {
+                                                <dt>Adresse:</dt>
+                                                <dd class="mb-0">@Model.PollingStation.Address</dd>
+                                            }
+                                        </dl>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center py-3">
+                                            <i class="fas fa-globe fa-2x text-info mb-2"></i>
+                                            <p class="text-muted mb-0">Résultat Global</p>
+                                            <small>Tous bureaux confondus</small>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Métadonnées -->
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="fas fa-database me-2"></i>Métadonnées
+                                    </h6>
+                                    <dl class="mb-0">
+                                        <dt>ID du Résultat:</dt>
+                                        <dd class="mb-2"><code>@Model?.Id</code></dd>
+
+                                        <dt>Date de Soumission:</dt>
+                                        <dd class="mb-2">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            @Model.SubmittedAt.ToString("dd/MM/yyyy à HH:mm")
+                                        </dd>
+
+                                        <dt>Créé le:</dt>
+                                        <dd class="mb-2">
+                                            <i class="fas fa-plus me-1"></i>
+                                            @Model.CreatedAt.ToString("dd/MM/yyyy à HH:mm")
+                                        </dd>
+
+                                        <dt>Modifié le:</dt>
+                                        <dd class="mb-0">
+                                            <i class="fas fa-edit me-1"></i>
+                                            @Model.UpdatedAt.ToString("dd/MM/yyyy à HH:mm")
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            <!-- Notes de vérification -->
+                            @if (!string.IsNullOrEmpty(Model?.VerificationNotes))
+                            {
+                                <hr>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <h6 class="fw-bold mb-2">
+                                            <i class="fas fa-comment me-2"></i>Notes de Vérification
+                                        </h6>
+                                        <div class="bg-light p-3 rounded">
+                                            <p class="mb-0">@Model.VerificationNotes</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Statut de vérification -->
+                            <hr>
+                            <div class="row">
+                                <div class="col-12">
+                                    <h6 class="fw-bold mb-2">
+                                        <i class="fas fa-shield-alt me-2"></i>Statut de Vérification
+                                    </h6>
+                                    @if (Model?.Verified == true)
+                                    {
+                                        <div class="alert alert-success border-0">
+                                            <i class="fas fa-check-circle me-2"></i>
+                                            Ce résultat était <strong>vérifié et validé</strong>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-warning border-0">
+                                            <i class="fas fa-clock me-2"></i>
+                                            Ce résultat était <strong>non vérifié</strong>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panneau latéral -->
+                <div class="col-lg-4">
+                    <!-- Confirmation de suppression -->
+                    <div class="card border-danger shadow-sm mb-4 sticky-top">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Confirmation
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-trash-alt fa-4x text-danger mb-3"></i>
+                                <h5 class="text-danger">Supprimer Définitivement</h5>
+                                <p class="text-muted">Cette action ne peut pas être annulée</p>
+                            </div>
+
+                            <form asp-action="Delete" method="post" id="deleteForm">
+                                <input type="hidden" asp-for="Id" />
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                                        <label class="form-check-label text-danger" for="confirmDelete">
+                                            Je confirme vouloir supprimer ce résultat
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-danger btn-lg" id="deleteButton" disabled>
+                                        <i class="fas fa-trash me-2"></i>Supprimer Définitivement
+                                    </button>
+                                    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">
+                                        <i class="fas fa-edit me-2"></i>Modifier Plutôt
+                                    </a>
+                                    <a asp-action="Details" asp-route-id="@Model?.Id" class="btn btn-info">
+                                        <i class="fas fa-eye me-2"></i>Voir les Détails
+                                    </a>
+                                    <a asp-action="Index" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-2"></i>Annuler
+                                    </a>
+                                </div>
+                            </form>
+
+                            <!-- Raison de suppression -->
+                            <div class="mt-4 p-3 bg-light rounded">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-question-circle me-2"></i>Raisons Possibles
+                                </h6>
+                                <ul class="small mb-0">
+                                    <li>Données erronées</li>
+                                    <li>Doublon détecté</li>
+                                    <li>Erreur de saisie</li>
+                                    <li>Annulation officielle</li>
+                                    <li>Mise à jour administrative</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alternatives à la suppression -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="fas fa-lightbulb me-2"></i>Alternatives
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small text-muted mb-3">
+                                Considérez ces alternatives avant la suppression :
+                            </p>
+                            
+                            <div class="d-grid gap-2">
+                                <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-outline-warning btn-sm">
+                                    <i class="fas fa-edit me-2"></i>Corriger les Données
+                                </a>
+                                
+                                <button type="button" class="btn btn-outline-info btn-sm" onclick="markAsUnverified()">
+                                    <i class="fas fa-shield-alt me-2"></i>Marquer Non Vérifié
+                                </button>
+                                
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addNote()">
+                                    <i class="fas fa-comment me-2"></i>Ajouter une Note
+                                </button>
+                            </div>
+
+                            <div class="alert alert-info alert-sm mt-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Conseil :</strong> Préférez la modification à la suppression pour préserver l'historique.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Gestion de la confirmation de suppression
+        document.getElementById('confirmDelete').addEventListener('change', function() {
+            const deleteButton = document.getElementById('deleteButton');
+            deleteButton.disabled = !this.checked;
+            
+            if (this.checked) {
+                deleteButton.classList.add('pulse-animation');
+            } else {
+                deleteButton.classList.remove('pulse-animation');
+            }
+        });
+
+        // Confirmation finale avant suppression
+        document.getElementById('deleteForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const candidateName = '@(Model?.Candidate?.FirstName + " " + Model?.Candidate?.LastName ?? "ce candidat")';
+            const votes = '@(Model?.Votes.ToString("N0") ?? "0")';
+            
+            if (confirm(`⚠️ ATTENTION ⚠️\n\nVous allez supprimer définitivement :\n\n` +
+                       `• Résultat de ${candidateName}\n` +
+                       `• ${votes} votes enregistrés\n` +
+                       `• Toutes les métadonnées associées\n\n` +
+                       `Cette action est IRRÉVERSIBLE !\n\n` +
+                       `Confirmez-vous la suppression ?`)) {
+                
+                if (confirm(`Dernière confirmation :\n\nSuppression définitive du résultat ?\n\n✅ OUI = Supprimer\n❌ NON = Annuler`)) {
+                    // Afficher un loader
+                    const deleteButton = document.getElementById('deleteButton');
+                    deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Suppression...';
+                    deleteButton.disabled = true;
+                    
+                    // Soumettre le formulaire
+                    this.submit();
+                }
+            }
+        });
+
+        // Fonction pour marquer comme non vérifié (alternative)
+        function markAsUnverified() {
+            if (confirm('Marquer ce résultat comme non vérifié au lieu de le supprimer ?')) {
+                // Redirection vers l'édition avec paramètre
+                window.location.href = '@Url.Action("Edit", new { id = Model?.Id })' + '?unverify=true';
+            }
+        }
+
+        // Fonction pour ajouter une note (alternative)
+        function addNote() {
+            const note = prompt('Ajouter une note explicative sur ce résultat :');
+            if (note && note.trim()) {
+                // Redirection vers l'édition avec paramètre
+                window.location.href = '@Url.Action("Edit", new { id = Model?.Id })' + '?note=' + encodeURIComponent(note);
+            }
+        }
+
+        // Animation du bouton de suppression
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButton = document.getElementById('deleteButton');
+            
+            deleteButton.addEventListener('mouseenter', function() {
+                if (!this.disabled) {
+                    this.classList.add('shake-animation');
+                }
+            });
+            
+            deleteButton.addEventListener('mouseleave', function() {
+                this.classList.remove('shake-animation');
+            });
+        });
+    </script>
+}
+
+<style>
+    .card-header {
+        border-bottom: none;
+        font-weight: 600;
+    }
+    
+    .display-6 {
+        font-size: 2rem;
+    }
+    
+    .rounded-3 {
+        border-radius: 1rem !important;
+    }
+    
+    .sticky-top {
+        top: 20px;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1.1rem;
+    }
+    
+    .alert-sm {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    code {
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Animations */
+    .pulse-animation {
+        animation: pulse 1.5s infinite;
+    }
+    
+    @@keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .shake-animation {
+        animation: shake 0.5s;
+    }
+    
+    @@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+        20%, 40%, 60%, 80% { transform: translateX(2px); }
+    }
+    
+    .progress {
+        border-radius: 0.5rem;
+        background-color: #f8f9fa;
+    }
+    
+    .progress-bar {
+        border-radius: 0.5rem;
+    }
+    
+    @@media (max-width: 768px) {
+        .sticky-top {
+            position: relative !important;
+            top: auto !important;
+        }
+    }
+</style>

@@ -1,0 +1,345 @@
+@{
+    ViewData["Title"] = "Bureaux de Vote";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Election" asp-action="Dashboard">Élection</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Bureaux de Vote</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-building text-info"></i>
+                    @ViewData["Title"] - ETOUDI 2025
+                </h2>
+                <div>
+                    <a asp-controller="PollingStation" asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Nouveau Bureau
+                    </a>
+                    <a href="#" class="btn btn-outline-secondary">
+                        <i class="fas fa-download"></i> Export Excel
+                    </a>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Liste des Bureaux de Vote
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                </div>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Rechercher un bureau de vote...">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-filter"></i></span>
+                                </div>
+                                <select class="form-control" id="statusFilter">
+                                    <option value="">Tous les statuts</option>
+                                    <option value="active">Actif</option>
+                                    <option value="inactive">Inactif</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeholder pour les données -->
+                    <div id="polling-stations-container">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th><i class="fas fa-hashtag"></i> ID</th>
+                                        <th><i class="fas fa-building"></i> Nom</th>
+                                        <th><i class="fas fa-map-marker-alt"></i> Adresse</th>
+                                        <th><i class="fas fa-users"></i> Capacité</th>
+                                        <th><i class="fas fa-city"></i> Commune</th>
+                                        <th><i class="fas fa-map"></i> Centre de Vote</th>
+                                        <th><i class="fas fa-info-circle"></i> Statut</th>
+                                        <th><i class="fas fa-cogs"></i> Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="polling-stations-tbody">
+                                    <!-- Les données seront chargées ici -->
+                                    <tr>
+                                        <td colspan="8" class="text-center">
+                                            <div class="spinner-border text-info" role="status">
+                                                <span class="sr-only">Chargement...</span>
+                                            </div>
+                                            <p class="mt-2 text-muted">Chargement des bureaux de vote...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques -->
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card border-info">
+                        <div class="card-body text-center">
+                            <h3 class="text-info" id="total-stations">0</h3>
+                            <p class="mb-0">Total Bureaux</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <h3 class="text-success" id="active-stations">0</h3>
+                            <p class="mb-0">Bureaux Actifs</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-warning">
+                        <div class="card-body text-center">
+                            <h3 class="text-warning" id="total-capacity">0</h3>
+                            <p class="mb-0">Capacité Totale</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <h3 class="text-primary" id="avg-capacity">0</h3>
+                            <p class="mb-0">Capacité Moyenne</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: box-shadow 0.15s ease-in-out;
+    }
+
+    .card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: #495057;
+        background-color: #f8f9fa;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.075);
+    }
+
+    .btn {
+        border-radius: 0.375rem;
+        font-weight: 500;
+        transition: all 0.15s ease-in-out;
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    }
+
+    .breadcrumb {
+        background-color: transparent;
+        padding: 0;
+        margin-bottom: 1rem;
+    }
+
+    .breadcrumb-item + .breadcrumb-item::before {
+        color: #6c757d;
+    }
+
+    .input-group-text {
+        background-color: #e9ecef;
+        border-color: #ced4da;
+        color: #495057;
+    }
+
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    .card.border-info {
+        border-color: #17a2b8 !important;
+    }
+
+    .card.border-success {
+        border-color: #28a745 !important;
+    }
+
+    .card.border-warning {
+        border-color: #ffc107 !important;
+    }
+
+    .card.border-primary {
+        border-color: #007bff !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPollingStationsData();
+        
+        // Recherche en temps réel
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            filterPollingStations();
+        });
+        
+        // Filtre par statut
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            filterPollingStations();
+        });
+    });
+
+    async function loadPollingStationsData() {
+        try {
+            // Simuler des données pour la démonstration
+            const mockData = [
+                {
+                    id: 1,
+                    name: "Bureau Central Nord",
+                    address: "Avenue de l'Indépendance, Yaoundé",
+                    capacity: 500,
+                    commune: "Yaoundé I",
+                    votingCenter: "Centre Nord",
+                    isActive: true
+                },
+                {
+                    id: 2,
+                    name: "Bureau École Primaire",
+                    address: "Quartier Mvog-Ada, Yaoundé",
+                    capacity: 350,
+                    commune: "Yaoundé II",
+                    votingCenter: "Centre Est",
+                    isActive: true
+                },
+                {
+                    id: 3,
+                    name: "Bureau Lycée Technique",
+                    address: "Boulevard du 20 Mai, Yaoundé",
+                    capacity: 400,
+                    commune: "Yaoundé III",
+                    votingCenter: "Centre Sud",
+                    isActive: false
+                }
+            ];
+            
+            displayPollingStations(mockData);
+            updateStatistics(mockData);
+            
+        } catch (error) {
+            console.error('Erreur lors du chargement des données:', error);
+            document.getElementById('polling-stations-tbody').innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center text-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Erreur lors du chargement des données
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    function displayPollingStations(stations) {
+        const tbody = document.getElementById('polling-stations-tbody');
+        
+        if (stations.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center text-muted">
+                        <i class="fas fa-inbox"></i>
+                        Aucun bureau de vote trouvé
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = stations.map(station => `
+            <tr>
+                <td><strong>${station.id}</strong></td>
+                <td>
+                    <i class="fas fa-building text-info"></i>
+                    ${station.name}
+                </td>
+                <td>
+                    <i class="fas fa-map-marker-alt text-danger"></i>
+                    ${station.address}
+                </td>
+                <td>
+                    <span class="badge badge-secondary">${station.capacity}</span>
+                </td>
+                <td>${station.commune}</td>
+                <td>${station.votingCenter}</td>
+                <td>
+                    <span class="badge ${station.isActive ? 'badge-success' : 'badge-secondary'}">
+                        <i class="fas ${station.isActive ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                        ${station.isActive ? 'Actif' : 'Inactif'}
+                    </span>
+                </td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="/PollingStation/Details/${station.id}" class="btn btn-sm btn-outline-info" title="Détails">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="/PollingStation/Edit/${station.id}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger" title="Supprimer" onclick="confirmDelete(${station.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function updateStatistics(stations) {
+        const totalStations = stations.length;
+        const activeStations = stations.filter(s => s.isActive).length;
+        const totalCapacity = stations.reduce((sum, s) => sum + s.capacity, 0);
+        const avgCapacity = totalStations > 0 ? Math.round(totalCapacity / totalStations) : 0;
+        
+        document.getElementById('total-stations').textContent = totalStations;
+        document.getElementById('active-stations').textContent = activeStations;
+        document.getElementById('total-capacity').textContent = totalCapacity;
+        document.getElementById('avg-capacity').textContent = avgCapacity;
+    }
+
+    function filterPollingStations() {
+        // Implémentation du filtrage - pour la démonstration
+        console.log('Filtrage des bureaux de vote...');
+    }
+
+    function confirmDelete(stationId) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer ce bureau de vote ?')) {
+            // Logique de suppression
+            console.log('Suppression du bureau:', stationId);
+        }
+    }
+</script>

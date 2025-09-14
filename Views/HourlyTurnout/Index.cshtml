@@ -1,0 +1,424 @@
+@model IEnumerable<VcBlazor.Data.Entities.HourlyTurnout>
+
+@{
+    ViewData["Title"] = "Affluence Horaire - ETOUDI 2025";
+}
+
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="h3 mb-1">
+                <i class="fas fa-clock text-primary"></i>
+                Affluence Horaire des Bureaux de Vote
+            </h2>
+            <p class="text-muted mb-0">Suivi en temps réel de l'affluence électorale par bureau et par heure</p>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouveau Relevé
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-chart-line fa-2x text-primary"></i>
+                    </div>
+                    <h3 class="mb-1" id="totalRecords">@Model.Count()</h3>
+                    <p class="text-muted mb-0">Relevés Totaux</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-building fa-2x text-success"></i>
+                    </div>
+                    <h3 class="mb-1" id="uniqueStations">@Model.Select(h => h.PollingStationId).Distinct().Count()</h3>
+                    <p class="text-muted mb-0">Bureaux Suivis</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-users fa-2x text-info"></i>
+                    </div>
+                    <h3 class="mb-1" id="totalVoters">@Model.Sum(h => h.VotersCount).ToString("N0")</h3>
+                    <p class="text-muted mb-0">Votes Comptabilisés</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-percentage fa-2x text-warning"></i>
+                    </div>
+                    <h3 class="mb-1" id="avgTurnout">
+                        @(Model.Any() ? Model.Average(h => h.TurnoutRate).ToString("F1") : "0.0")%
+                    </h3>
+                    <p class="text-muted mb-0">Taux Moyen</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-search me-2"></i>Recherche
+                    </label>
+                    <input type="text" id="searchInput" class="form-control" 
+                           placeholder="Rechercher par bureau, heure...">
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-clock me-2"></i>Heure
+                    </label>
+                    <select id="hourFilter" class="form-select">
+                        <option value="">Toutes les heures</option>
+                        @for (int h = 7; h <= 18; h++)
+                        {
+                            <option value="@h">@h:00</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-percentage me-2"></i>Taux Min.
+                    </label>
+                    <select id="turnoutFilter" class="form-select">
+                        <option value="">Tous les taux</option>
+                        <option value="0">0% - 25%</option>
+                        <option value="25">25% - 50%</option>
+                        <option value="50">50% - 75%</option>
+                        <option value="75">75% et plus</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-calendar me-2"></i>Date
+                    </label>
+                    <input type="date" id="dateFilter" class="form-control" 
+                           value="@DateTime.Today.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label text-white">.</label>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Effacer
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="exportData()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des données -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-table me-2"></i>Relevés d'Affluence Horaire
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="turnoutTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="sortable" data-sort="station">
+                                <i class="fas fa-building me-2"></i>Bureau de Vote
+                            </th>
+                            <th class="sortable" data-sort="hour">
+                                <i class="fas fa-clock me-2"></i>Heure
+                            </th>
+                            <th class="sortable" data-sort="voters">
+                                <i class="fas fa-users me-2"></i>Votants (Période)
+                            </th>
+                            <th class="sortable" data-sort="cumulative">
+                                <i class="fas fa-chart-line me-2"></i>Cumul Total
+                            </th>
+                            <th class="sortable" data-sort="turnout">
+                                <i class="fas fa-percentage me-2"></i>Taux
+                            </th>
+                            <th class="sortable" data-sort="recorded">
+                                <i class="fas fa-calendar me-2"></i>Enregistré
+                            </th>
+                            <th>
+                                <i class="fas fa-cogs"></i> Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <i class="fas fa-map-marker-alt text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">
+                                                @if (item.PollingStation != null)
+                                                {
+                                                    @item.PollingStation.Name
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Bureau #@item.PollingStationId</span>
+                                                }
+                                            </div>
+                                            <small class="text-muted">ID: @item.PollingStationId</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info fs-6">
+                                        <i class="fas fa-clock me-1"></i>@item.Hour:00
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold fs-5">@item.VotersCount.ToString("N0")</span>
+                                    <br><small class="text-muted">votants cette heure</small>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-primary fs-5">@item.CumulativeCount.ToString("N0")</span>
+                                    <br><small class="text-muted">total cumulé</small>
+                                </td>
+                                <td>
+                                    @{
+                                        var badgeClass = item.TurnoutRate switch
+                                        {
+                                            >= 75 => "bg-success",
+                                            >= 50 => "bg-warning",
+                                            >= 25 => "bg-info",
+                                            _ => "bg-danger"
+                                        };
+                                    }
+                                    <span class="badge @badgeClass fs-6">
+                                        @item.TurnoutRate.ToString("F1")%
+                                    </span>
+                                    <br>
+                                    <div class="progress mt-1" style="height: 4px;">
+                                        <div class="progress-bar @badgeClass.Replace("bg-", "bg-")" 
+                                             style="width: @Math.Min(item.TurnoutRate, 100)%"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="small">
+                                        <div><i class="fas fa-calendar me-1"></i>@item.RecordedAt.ToString("dd/MM/yyyy")</div>
+                                        <div><i class="fas fa-clock me-1"></i>@item.RecordedAt.ToString("HH:mm")</div>
+                                        @if (item.RecordedByUser != null)
+                                        {
+                                            <div><i class="fas fa-user me-1"></i>@item.RecordedByUser.FirstName @item.RecordedByUser.LastName</div>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details" asp-route-id="@item.Id" 
+                                           class="btn btn-sm btn-outline-info" title="Détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@item.Id" 
+                                           class="btn btn-sm btn-outline-primary" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" 
+                                           class="btn btn-sm btn-outline-danger" title="Supprimer"
+                                           onclick="return confirm('Supprimer ce relevé d\\'affluence ?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                
+                @if (!Model.Any())
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Aucun relevé d'affluence</h5>
+                        <p class="text-muted">Commencez par enregistrer les données d'affluence horaire.</p>
+                        <a asp-action="Create" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Premier Relevé
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Fonctions de filtrage
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const hourFilter = document.getElementById('hourFilter').value;
+            const turnoutFilter = document.getElementById('turnoutFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            const table = document.getElementById('turnoutTable');
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            
+            for (let row of rows) {
+                let visible = true;
+                
+                // Recherche textuelle
+                if (searchTerm) {
+                    const rowText = row.textContent.toLowerCase();
+                    visible = visible && rowText.includes(searchTerm);
+                }
+                
+                // Filtre par heure
+                if (hourFilter) {
+                    const hourBadge = row.querySelector('.badge:contains("' + hourFilter + ':00")');
+                    visible = visible && (hourBadge !== null);
+                }
+                
+                // Filtre par taux
+                if (turnoutFilter) {
+                    const turnoutText = row.cells[4].querySelector('.badge').textContent;
+                    const turnoutValue = parseFloat(turnoutText.replace('%', ''));
+                    const filterValue = parseInt(turnoutFilter);
+                    
+                    switch (filterValue) {
+                        case 0:
+                            visible = visible && (turnoutValue >= 0 && turnoutValue < 25);
+                            break;
+                        case 25:
+                            visible = visible && (turnoutValue >= 25 && turnoutValue < 50);
+                            break;
+                        case 50:
+                            visible = visible && (turnoutValue >= 50 && turnoutValue < 75);
+                            break;
+                        case 75:
+                            visible = visible && (turnoutValue >= 75);
+                            break;
+                    }
+                }
+                
+                row.style.display = visible ? '' : 'none';
+            }
+        }
+        
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('hourFilter').value = '';
+            document.getElementById('turnoutFilter').value = '';
+            document.getElementById('dateFilter').value = '@DateTime.Today.ToString("yyyy-MM-dd")';
+            filterTable();
+        }
+        
+        function exportData() {
+            // Implémentation future de l'export Excel/CSV
+            alert('Fonctionnalité d\'export en cours de développement');
+        }
+        
+        // Tri des colonnes
+        function sortTable(columnIndex, type) {
+            const table = document.getElementById('turnoutTable');
+            const tbody = table.getElementsByTagName('tbody')[0];
+            const rows = Array.from(tbody.getElementsByTagName('tr'));
+            
+            rows.sort((a, b) => {
+                let aVal, bVal;
+                
+                switch (type) {
+                    case 'number':
+                        aVal = parseFloat(a.cells[columnIndex].textContent.replace(/[^\d.-]/g, ''));
+                        bVal = parseFloat(b.cells[columnIndex].textContent.replace(/[^\d.-]/g, ''));
+                        break;
+                    case 'date':
+                        aVal = new Date(a.cells[columnIndex].textContent);
+                        bVal = new Date(b.cells[columnIndex].textContent);
+                        break;
+                    default:
+                        aVal = a.cells[columnIndex].textContent.toLowerCase();
+                        bVal = b.cells[columnIndex].textContent.toLowerCase();
+                }
+                
+                return aVal > bVal ? 1 : -1;
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+        }
+        
+        // Écoute des événements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Filtrage en temps réel
+            document.getElementById('searchInput').addEventListener('input', filterTable);
+            document.getElementById('hourFilter').addEventListener('change', filterTable);
+            document.getElementById('turnoutFilter').addEventListener('change', filterTable);
+            document.getElementById('dateFilter').addEventListener('change', filterTable);
+            
+            // Tri sur les en-têtes
+            document.querySelectorAll('.sortable').forEach(header => {
+                header.style.cursor = 'pointer';
+                header.addEventListener('click', function() {
+                    const columnIndex = Array.from(this.parentNode.children).indexOf(this);
+                    const sortType = this.dataset.sort;
+                    
+                    // Déterminer le type de tri
+                    let type = 'text';
+                    if (['voters', 'cumulative', 'turnout'].includes(sortType)) {
+                        type = 'number';
+                    } else if (['recorded'].includes(sortType)) {
+                        type = 'date';
+                    }
+                    
+                    sortTable(columnIndex, type);
+                    
+                    // Indicateur visuel
+                    document.querySelectorAll('.sortable').forEach(h => h.classList.remove('bg-light'));
+                    this.classList.add('bg-light');
+                });
+            });
+        });
+    </script>
+}
+
+<style>
+    .sortable:hover {
+        background-color: #f8f9fa !important;
+    }
+    
+    .card-header {
+        border-bottom: none;
+        font-weight: 600;
+    }
+    
+    .progress {
+        border-radius: 2px;
+    }
+    
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .badge {
+        font-size: 0.8rem !important;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+</style>

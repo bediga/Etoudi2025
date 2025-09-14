@@ -1,0 +1,441 @@
+@model IEnumerable<VcBlazor.Data.Entities.User>
+
+@{
+    ViewData["Title"] = "Gestion des Utilisateurs";
+    var totalUsers = Model?.Count() ?? 0;
+    var activeUsers = Model?.Count(u => u.IsActive) ?? 0;
+    var inactiveUsers = totalUsers - activeUsers;
+    var adminUsers = Model?.Count(u => u.Role == "admin") ?? 0;
+}
+
+<style>
+    .user-card { transition: transform 0.2s; }
+    .user-card:hover { transform: translateY(-2px); }
+    .user-avatar { width: 60px; height: 60px; object-fit: cover; }
+    .role-badge { font-size: 0.75em; }
+</style>
+
+<div class="container-fluid">
+    <!-- En-tête avec statistiques -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h4 mb-0">
+                    <i class="fas fa-users-cog text-primary me-2"></i>
+                    Gestion des Utilisateurs ETOUDI 2025
+                </h2>
+                <a href="/User/Create" class="btn btn-primary">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Nouvel Utilisateur
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques globales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h3 class="mb-0">@totalUsers</h3>
+                    <small>Total Utilisateurs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-check fa-2x mb-2"></i>
+                    <h3 class="mb-0">@activeUsers</h3>
+                    <small>Actifs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-times fa-2x mb-2"></i>
+                    <h3 class="mb-0">@inactiveUsers</h3>
+                    <small>Inactifs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-shield fa-2x mb-2"></i>
+                    <h3 class="mb-0">@adminUsers</h3>
+                    <small>Administrateurs</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Recherche</label>
+                            <input type="text" id="searchFilter" class="form-control" placeholder="Nom, prénom ou email...">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Rôle</label>
+                            <select id="roleFilter" class="form-select">
+                                <option value="">Tous les rôles</option>
+                                @if (Model != null)
+                                {
+                                    var roles = Model.Select(u => u.Role).Distinct().OrderBy(r => r);
+                                    foreach (var role in roles)
+                                    {
+                                        <option value="@role">@role</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Statut</label>
+                            <select id="statusFilter" class="form-select">
+                                <option value="">Tous</option>
+                                <option value="true">Actif</option>
+                                <option value="false">Inactif</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Région</label>
+                            <select id="regionFilter" class="form-select">
+                                <option value="">Toutes</option>
+                                @if (Model != null)
+                                {
+                                    var regions = Model.Where(u => !string.IsNullOrEmpty(u.Region)).Select(u => u.Region).Distinct().OrderBy(r => r);
+                                    foreach (var region in regions)
+                                    {
+                                        <option value="@region">@region</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-outline-secondary me-2" onclick="clearFilters()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <button class="btn btn-primary" onclick="exportUsers()">
+                                <i class="fas fa-download me-2"></i>Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des utilisateurs -->
+    <div class="row">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var user in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4 user-item" 
+                     data-role="@user.Role" 
+                     data-active="@user.IsActive.ToString().ToLower()"
+                     data-region="@(user.Region ?? "")"
+                     data-search="@($"{user.FirstName} {user.LastName} {user.Email}".ToLower())">
+                    <div class="card user-card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start mb-3">
+                                <!-- Avatar de l'utilisateur -->
+                                <div class="me-3">
+                                    @if (!string.IsNullOrEmpty(user.AvatarPath))
+                                    {
+                                        <img src="@user.AvatarPath" alt="@user.FirstName @user.LastName" 
+                                             class="rounded-circle user-avatar border">
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded-circle user-avatar border d-flex align-items-center justify-content-center bg-light">
+                                            <i class="fas fa-user fa-lg text-muted"></i>
+                                        </div>
+                                    }
+                                </div>
+                                
+                                <!-- Informations utilisateur -->
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-1">@user.FirstName @user.LastName</h5>
+                                    
+                                    <div class="mb-2">
+                                        @{
+                                            var roleClass = user.Role switch {
+                                                "admin" => "bg-danger",
+                                                "supervisor" => "bg-warning",
+                                                "operator" => "bg-info",
+                                                _ => "bg-secondary"
+                                            };
+                                        }
+                                        <span class="badge @roleClass role-badge me-2">@user.Role</span>
+                                        
+                                        @if (user.IsActive)
+                                        {
+                                            <span class="badge bg-success role-badge">Actif</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary role-badge">Inactif</span>
+                                        }
+                                    </div>
+
+                                    <p class="text-muted small mb-1">
+                                        <i class="fas fa-envelope me-1"></i>@user.Email
+                                    </p>
+
+                                    @if (!string.IsNullOrEmpty(user.PhoneNumber))
+                                    {
+                                        <p class="text-muted small mb-1">
+                                            <i class="fas fa-phone me-1"></i>@user.PhoneNumber
+                                        </p>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(user.Region))
+                                    {
+                                        <p class="text-muted small mb-1">
+                                            <i class="fas fa-map-marker-alt me-1"></i>@user.Region
+                                        </p>
+                                    }
+
+                                    @if (user.PollingStation != null)
+                                    {
+                                        <p class="text-muted small mb-1">
+                                            <i class="fas fa-building me-1"></i>Bureau: @user.PollingStation.Name
+                                        </p>
+                                    }
+                                </div>
+                                
+                                <!-- Indicateurs de statut -->
+                                <div class="text-end">
+                                    @if (user.MustChangePassword)
+                                    {
+                                        <i class="fas fa-key text-warning" title="Doit changer le mot de passe"></i>
+                                    }
+                                    
+                                    @if (user.LastLoginAt.HasValue)
+                                    {
+                                        <small class="text-muted d-block">
+                                            Dernière connexion:<br>
+                                            @user.LastLoginAt.Value.ToString("dd/MM/yyyy")
+                                        </small>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Informations supplémentaires -->
+                            <div class="d-flex justify-content-between align-items-center mb-3 small text-muted">
+                                <div>
+                                    <i class="fas fa-calendar-plus me-1"></i>
+                                    Créé: @user.CreatedAt.ToString("dd/MM/yyyy")
+                                </div>
+                                @if (user.UpdatedAt != user.CreatedAt)
+                                {
+                                    <div>
+                                        <i class="fas fa-edit me-1"></i>
+                                        Modifié: @user.UpdatedAt.ToString("dd/MM/yyyy")
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="d-flex gap-2">
+                                <a href="/User/Details/@user.Id" class="btn btn-sm btn-outline-primary flex-fill">
+                                    <i class="fas fa-eye me-1"></i>Voir
+                                </a>
+                                <a href="/User/Edit/@user.Id" class="btn btn-sm btn-outline-warning flex-fill">
+                                    <i class="fas fa-edit me-1"></i>Modifier
+                                </a>
+                                
+                                <!-- Dropdown pour actions supplémentaires -->
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        @if (user.IsActive)
+                                        {
+                                            <li><a class="dropdown-item" href="#" onclick="deactivateUser(@user.Id)">
+                                                <i class="fas fa-user-slash me-2"></i>Désactiver
+                                            </a></li>
+                                        }
+                                        else
+                                        {
+                                            <li><a class="dropdown-item" href="#" onclick="activateUser(@user.Id)">
+                                                <i class="fas fa-user-check me-2"></i>Activer
+                                            </a></li>
+                                        }
+                                        
+                                        <li><a class="dropdown-item" href="#" onclick="resetPassword(@user.Id)">
+                                            <i class="fas fa-key me-2"></i>Reset mot de passe
+                                        </a></li>
+                                        
+                                        <li><hr class="dropdown-divider"></li>
+                                        
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteUser(@user.Id, '@user.FirstName @user.LastName')">
+                                            <i class="fas fa-trash me-2"></i>Supprimer
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-users-cog fa-3x text-muted mb-3"></i>
+                    <h5>Aucun utilisateur enregistré</h5>
+                    <p class="text-muted">Commencez par ajouter des utilisateurs pour le système ETOUDI 2025.</p>
+                    <a href="/User/Create" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Ajouter un utilisateur
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    // Filtrage des utilisateurs
+    function filterUsers() {
+        const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+        const roleFilter = document.getElementById('roleFilter').value;
+        const statusFilter = document.getElementById('statusFilter').value;
+        const regionFilter = document.getElementById('regionFilter').value;
+        
+        const users = document.querySelectorAll('.user-item');
+        
+        users.forEach(user => {
+            const role = user.getAttribute('data-role');
+            const isActive = user.getAttribute('data-active');
+            const region = user.getAttribute('data-region');
+            const searchText = user.getAttribute('data-search');
+            
+            const matchSearch = !searchFilter || searchText.includes(searchFilter);
+            const matchRole = !roleFilter || role === roleFilter;
+            const matchStatus = !statusFilter || isActive === statusFilter;
+            const matchRegion = !regionFilter || region === regionFilter;
+            
+            user.style.display = matchSearch && matchRole && matchStatus && matchRegion ? 'block' : 'none';
+        });
+    }
+
+    // Event listeners pour les filtres
+    document.getElementById('searchFilter').addEventListener('input', filterUsers);
+    document.getElementById('roleFilter').addEventListener('change', filterUsers);
+    document.getElementById('statusFilter').addEventListener('change', filterUsers);
+    document.getElementById('regionFilter').addEventListener('change', filterUsers);
+
+    function clearFilters() {
+        document.getElementById('searchFilter').value = '';
+        document.getElementById('roleFilter').value = '';
+        document.getElementById('statusFilter').value = '';
+        document.getElementById('regionFilter').value = '';
+        filterUsers();
+    }
+
+    function exportUsers() {
+        // Implémentation de l'export Excel
+        alert('Fonctionnalité d\\'export en cours de développement');
+    }
+
+    // Actions sur les utilisateurs
+    function activateUser(userId) {
+        if (confirm('Activer cet utilisateur ?')) {
+            // Appel AJAX pour activer
+            fetch(`/User/Activate/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Erreur lors de l\\'activation');
+                }
+            })
+            .catch(error => {
+                alert('Erreur: ' + error.message);
+            });
+        }
+    }
+
+    function deactivateUser(userId) {
+        if (confirm('Désactiver cet utilisateur ?')) {
+            // Appel AJAX pour désactiver
+            fetch(`/User/Deactivate/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Erreur lors de la désactivation');
+                }
+            })
+            .catch(error => {
+                alert('Erreur: ' + error.message);
+            });
+        }
+    }
+
+    function resetPassword(userId) {
+        if (confirm('Réinitialiser le mot de passe de cet utilisateur ?')) {
+            // Appel AJAX pour reset password
+            fetch(`/User/ResetPassword/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Nouveau mot de passe : ' + data.newPassword);
+                } else {
+                    alert('Erreur lors de la réinitialisation');
+                }
+            })
+            .catch(error => {
+                alert('Erreur: ' + error.message);
+            });
+        }
+    }
+
+    function deleteUser(userId, userName) {
+        if (confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur "${userName}" ?`)) {
+            // Appel AJAX pour supprimer
+            fetch(`/User/Delete/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Erreur lors de la suppression');
+                }
+            })
+            .catch(error => {
+                alert('Erreur: ' + error.message);
+            });
+        }
+    }
+</script>

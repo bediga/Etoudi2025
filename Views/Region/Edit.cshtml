@@ -1,0 +1,208 @@
+@model VcBlazor.Data.Entities.Region
+
+@{
+    ViewData["Title"] = $"Modifier {Model.Name} - ETOUDI 2025";
+}
+
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-gradient-warning text-white">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="h3 mb-2">
+                                <i class="fas fa-edit me-2"></i>
+                                Modifier la Région "@Model.Name"
+                            </h1>
+                            <p class="mb-0 opacity-90">Mettre à jour les informations de la région</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="@Url.Action("Details", new { id = Model.Id })" class="btn btn-light btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Retour aux détails
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire de modification -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Informations de la Région
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post" novalidate>
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="CreatedAt" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none"></div>
+                        
+                        <!-- Informations de base -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-warning mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Informations générales
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Nom de la région -->
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="Name" class="form-label fw-bold">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    Nom de la Région *
+                                </label>
+                                <input asp-for="Name" class="form-control form-control-lg" 
+                                       placeholder="Ex: Centre, Littoral, Adamaoua..." />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                                <div class="form-text">
+                                    <i class="fas fa-lightbulb me-1"></i>
+                                    Nom officiel de la région selon le découpage territorial
+                                </div>
+                            </div>
+
+                            <!-- Code de la région -->
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Code" class="form-label fw-bold">
+                                    <i class="fas fa-code me-1"></i>
+                                    Code Région
+                                </label>
+                                <input asp-for="Code" class="form-control form-control-lg" 
+                                       placeholder="Ex: CE, LT, AD..." maxlength="5" />
+                                <span asp-validation-for="Code" class="text-danger"></span>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Code court pour identification (optionnel)
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informations de suivi -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-muted mb-3">
+                                    <i class="fas fa-clock me-2"></i>
+                                    Informations de suivi
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong class="text-muted d-block">Date de création</strong>
+                                <span class="text-muted">@Model.CreatedAt.ToString("dd/MM/yyyy à HH:mm")</span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong class="text-muted d-block">Dernière modification</strong>
+                                <span class="text-muted">@Model.UpdatedAt.ToString("dd/MM/yyyy à HH:mm")</span>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <hr class="my-4">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="text-muted">
+                                        <i class="fas fa-asterisk text-danger me-1" style="font-size: 0.7em;"></i>
+                                        Champs obligatoires
+                                    </div>
+                                    <div>
+                                        <a href="@Url.Action("Details", new { id = Model.Id })" class="btn btn-outline-secondary btn-lg me-2">
+                                            <i class="fas fa-times me-2"></i>
+                                            Annuler
+                                        </a>
+                                        <button type="submit" class="btn btn-warning btn-lg">
+                                            <i class="fas fa-save me-2"></i>
+                                            Enregistrer les modifications
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avertissement sur les départements -->
+    @if (Model.Departments != null && Model.Departments.Any())
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="alert alert-info border-0 shadow-sm">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle fa-2x text-info"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="alert-heading mb-2">Départements associés</h6>
+                            <p class="mb-0">
+                                Cette région contient <strong>@Model.Departments.Count() département(s)</strong>. 
+                                Les modifications apportées ici n'affecteront pas les départements existants.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Validation Scripts -->
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Animation pour le focus des champs
+        $(document).ready(function() {
+            $('.form-control').on('focus', function() {
+                $(this).parent().find('.form-label').addClass('text-warning');
+            }).on('blur', function() {
+                $(this).parent().find('.form-label').removeClass('text-warning');
+            });
+
+            // Validation en temps réel
+            $('#Name').on('input', function() {
+                var value = $(this).val().trim();
+                if (value.length > 0) {
+                    $(this).removeClass('is-invalid').addClass('is-valid');
+                } else {
+                    $(this).removeClass('is-valid').addClass('is-invalid');
+                }
+            });
+
+            // Confirmation avant sauvegarde
+            $('form').on('submit', function(e) {
+                if (!confirm('Êtes-vous sûr de vouloir enregistrer ces modifications ?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+    </script>
+}
+
+<style>
+    .form-control:focus {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    }
+    
+    .form-label {
+        transition: color 0.2s ease;
+    }
+    
+    .bg-gradient-warning {
+        background: linear-gradient(45deg, #ffc107, #e0a800);
+    }
+</style>

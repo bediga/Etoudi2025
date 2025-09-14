@@ -1,0 +1,232 @@
+@model VcBlazor.Data.Entities.Region
+
+@{
+    ViewData["Title"] = $"Région {Model.Name} - ETOUDI 2025";
+}
+
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-gradient-info text-white">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="h3 mb-2">
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                Région @Model.Name
+                            </h1>
+                            <p class="mb-0 opacity-90">Détails et informations de la région</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="@Url.Action("Index")" class="btn btn-light btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Retour à la liste
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="row">
+        <!-- Informations de la région -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informations de la Région
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong class="text-muted d-block">Nom de la région</strong>
+                            <span class="fs-5">@Model.Name</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Code))
+                        {
+                            <div class="col-md-6 mb-3">
+                                <strong class="text-muted d-block">Code région</strong>
+                                <span class="badge bg-primary fs-6">@Model.Code</span>
+                            </div>
+                        }
+                        <div class="col-md-6 mb-3">
+                            <strong class="text-muted d-block">Date de création</strong>
+                            <span>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong class="text-muted d-block">Dernière modification</strong>
+                            <span>@Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        Actions
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-grid gap-3">
+                        <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning btn-lg">
+                            <i class="fas fa-edit me-2"></i>
+                            Modifier cette région
+                        </a>
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-list me-2"></i>
+                            Voir toutes les régions
+                        </a>
+                        <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="fas fa-trash-alt me-2"></i>
+                            Supprimer cette région
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Départements de la région -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-building me-2"></i>
+                        Départements de la région (@Model.Departments.Count())
+                    </h5>
+                    <a href="/Department/Create" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        Ajouter un département
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Departments.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="border-0 px-4 py-3">Nom</th>
+                                        <th class="border-0 px-4 py-3">Code</th>
+                                        <th class="border-0 px-4 py-3">Date de création</th>
+                                        <th class="border-0 px-4 py-3 text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var department in Model.Departments.OrderBy(d => d.Name))
+                                    {
+                                        <tr>
+                                            <td class="px-4 py-3">
+                                                <i class="fas fa-building text-muted me-2"></i>
+                                                @department.Name
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                @if (!string.IsNullOrEmpty(department.Code))
+                                                {
+                                                    <span class="badge bg-secondary">@department.Code</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td class="px-4 py-3">@department.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                            <td class="px-4 py-3 text-center">
+                                                <div class="btn-group" role="group">
+                                                    <a href="/Department/Details/@department.Id" class="btn btn-outline-info btn-sm">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="/Department/Edit/@department.Id" class="btn btn-outline-warning btn-sm">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-building text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted mt-3">Aucun département</h5>
+                            <p class="text-muted">Cette région n'a pas encore de départements.</p>
+                            <a href="/Department/Create" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                Créer le premier département
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-danger" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmer la suppression
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Êtes-vous sûr de vouloir supprimer la région <strong>@Model.Name</strong> ?</p>
+                @if (Model.Departments.Any())
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Attention :</strong> Cette région contient @Model.Departments.Count() département(s). 
+                        Supprimez d'abord les départements avant de supprimer la région.
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Cette action est irréversible.
+                    </div>
+                }
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>
+                    Annuler
+                </button>
+                @if (!Model.Departments.Any())
+                {
+                    <form asp-action="Delete" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt me-2"></i>
+                            Supprimer définitivement
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-info {
+        background: linear-gradient(45deg, #17a2b8, #138496);
+    }
+</style>

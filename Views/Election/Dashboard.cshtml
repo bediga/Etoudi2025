@@ -1,0 +1,239 @@
+@{
+    ViewData["Title"] = "Tableau de Bord Électoral";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-tachometer-alt text-primary"></i>
+                Tableau de Bord Électoral - ETOUDI 2025
+            </h2>
+            <p class="text-muted">Vue d'ensemble du système électoral en temps réel</p>
+            
+            <!-- Statistiques rapides -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-primary text-white mb-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="h6 text-uppercase">Candidats</div>
+                                    <div class="h4 font-weight-bold" id="total-candidates">5</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-users fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-success text-white mb-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="h6 text-uppercase">Bureaux de Vote</div>
+                                    <div class="h4 font-weight-bold" id="total-polling-stations">120</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-map-marker-alt fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-info text-white mb-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="h6 text-uppercase">Électeurs Inscrits</div>
+                                    <div class="h4 font-weight-bold" id="total-voters">85,000</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-vote-yea fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-warning text-white mb-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="h6 text-uppercase">Taux Participation</div>
+                                    <div class="h4 font-weight-bold" id="turnout-rate">67.5%</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-chart-line fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation rapide -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Actions Rapides</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <a asp-controller="Election" asp-action="Candidates" class="btn btn-outline-primary btn-lg w-100">
+                                        <i class="fas fa-users mb-2 d-block"></i>
+                                        Gestion des Candidats
+                                    </a>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <a asp-controller="Election" asp-action="PollingStations" class="btn btn-outline-success btn-lg w-100">
+                                        <i class="fas fa-map-marker-alt mb-2 d-block"></i>
+                                        Bureaux de Vote
+                                    </a>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <a asp-controller="Election" asp-action="Results" class="btn btn-outline-info btn-lg w-100">
+                                        <i class="fas fa-chart-bar mb-2 d-block"></i>
+                                        Résultats
+                                    </a>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <a href="#" class="btn btn-outline-warning btn-lg w-100">
+                                        <i class="fas fa-cogs mb-2 d-block"></i>
+                                        Administration
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aperçu des données récentes -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Activité Récente</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline">
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-success"></div>
+                                    <div class="timeline-content">
+                                        <h6>Nouvelle soumission de résultats</h6>
+                                        <p class="text-muted">Bureau de vote Centre-Ville - il y a 2 minutes</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-info"></div>
+                                    <div class="timeline-content">
+                                        <h6>Vérification complétée</h6>
+                                        <p class="text-muted">Arrondissement Nord - il y a 15 minutes</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-warning"></div>
+                                    <div class="timeline-content">
+                                        <h6>Nouveau candidat ajouté</h6>
+                                        <p class="text-muted">Marie Dubois - Parti Écologique - il y a 1 heure</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">État du Système</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Base de données</span>
+                                <span class="badge bg-success">Connectée</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Services Blazor</span>
+                                <span class="badge bg-success">Actifs</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Syncfusion UI</span>
+                                <span class="badge bg-success">Chargé</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Dernière sync</span>
+                                <small class="text-muted">Il y a 30 secondes</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+        .timeline-marker {
+            position: absolute;
+            left: -35px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .timeline-item:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 17px;
+            width: 2px;
+            height: calc(100% - 17px);
+            background-color: #e9ecef;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Charger les statistiques depuis l'API
+        async function loadStats() {
+            try {
+                const response = await fetch('@Url.Action("GetElectionStats", "Election")');
+                const stats = await response.json();
+                
+                document.getElementById('total-candidates').textContent = stats.totalCandidates;
+                document.getElementById('total-polling-stations').textContent = stats.totalPollingStations;
+                document.getElementById('total-voters').textContent = stats.totalRegisteredVoters.toLocaleString();
+                document.getElementById('turnout-rate').textContent = stats.averageTurnout.toFixed(1) + '%';
+            } catch (error) {
+                console.error('Erreur lors du chargement des statistiques:', error);
+            }
+        }
+
+        // Charger au démarrage
+        document.addEventListener('DOMContentLoaded', loadStats);
+        
+        // Actualiser toutes les 30 secondes
+        setInterval(loadStats, 30000);
+    </script>
+}

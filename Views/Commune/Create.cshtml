@@ -1,0 +1,62 @@
+@model VcBlazor.Data.Entities.Commune
+
+@{
+    ViewData["Title"] = "Nouvelle Commune - ETOUDI 2025";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-gradient-success text-white">
+                <div class="card-body p-4">
+                    <h1 class="h3 mb-2">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Créer une Nouvelle Commune
+                    </h1>
+                    <p class="mb-0 opacity-90">Ajouter une commune au système électoral</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="Name" class="form-label fw-bold">Nom de la commune *</label>
+                                <input asp-for="Name" class="form-control form-control-lg" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Code" class="form-label fw-bold">Code</label>
+                                <input asp-for="Code" class="form-control form-control-lg" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ArrondissementId" class="form-label fw-bold">Arrondissement *</label>
+                                <select asp-for="ArrondissementId" class="form-select form-control-lg" asp-items="ViewBag.ArrondissementId">
+                                    <option value="">Sélectionnez un arrondissement...</option>
+                                </select>
+                                <span asp-validation-for="ArrondissementId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <a href="@Url.Action("Index")" class="btn btn-outline-secondary me-2">Annuler</a>
+                            <button type="submit" class="btn btn-success">Créer la Commune</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+<style>
+    .bg-gradient-success { background: linear-gradient(45deg, #198754, #20c997); }
+</style>
