@@ -1,0 +1,358 @@
+@model VcBlazor.Data.Entities.ResultSubmission
+@{
+    ViewData["Title"] = "Détails de la Soumission";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-eye me-2"></i>
+                        Détails de la Soumission #@Model.Id
+                        <span class="badge bg-light text-dark ms-2">@Model.Status</span>
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Actions rapides -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="btn-toolbar" role="toolbar">
+                                <div class="btn-group me-2" role="group">
+                                    <a asp-action="UploadDocument" asp-route-id="@Model.Id" class="btn btn-success">
+                                        <i class="fas fa-upload me-2"></i>Ajouter Documents
+                                    </a>
+                                    <a asp-action="DocumentGallery" asp-route-id="@Model.Id" class="btn btn-info">
+                                        <i class="fas fa-images me-2"></i>Voir Documents (<span id="documentCount">...</span>)
+                                    </a>
+                                </div>
+                                <div class="btn-group me-2" role="group">
+                                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                                        <i class="fas fa-edit me-2"></i>Modifier
+                                    </a>
+                                </div>
+                                <div class="btn-group" role="group">
+                                    <a asp-action="Index" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Informations générales -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations Générales</h6>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row">
+                                        <dt class="col-sm-5">ID de Soumission:</dt>
+                                        <dd class="col-sm-7">#@Model.Id</dd>
+
+                                        <dt class="col-sm-5">Bureau de Vote:</dt>
+                                        <dd class="col-sm-7">
+                                            @if (Model.PollingStation != null)
+                                            {
+                                                @Model.PollingStation.Name
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Bureau #@Model.PollingStationId</span>
+                                            }
+                                        </dd>
+
+                                        <dt class="col-sm-5">Type de Soumission:</dt>
+                                        <dd class="col-sm-7">
+                                            <span class="badge bg-secondary">@Model.SubmissionType</span>
+                                        </dd>
+
+                                        <dt class="col-sm-5">Statut:</dt>
+                                        <dd class="col-sm-7">
+                                            @{
+                                                var statusClass = Model.Status switch
+                                                {
+                                                    "pending" => "bg-warning",
+                                                    "submitted" => "bg-primary",
+                                                    "verified" => "bg-success",
+                                                    "rejected" => "bg-danger",
+                                                    _ => "bg-secondary"
+                                                };
+                                            }
+                                            <span class="badge @statusClass">@Model.Status</span>
+                                        </dd>
+
+                                        <dt class="col-sm-5">Soumis le:</dt>
+                                        <dd class="col-sm-7">@Model.SubmittedAt.ToString("dd/MM/yyyy à HH:mm")</dd>
+
+                                        @if (Model.VerifiedAt.HasValue)
+                                        {
+                                            <dt class="col-sm-5">Vérifié le:</dt>
+                                            <dd class="col-sm-7">@Model.VerifiedAt.Value.ToString("dd/MM/yyyy à HH:mm")</dd>
+                                        }
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Statistiques de vote -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistiques de Vote</h6>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row">
+                                        <dt class="col-sm-6">Électeurs inscrits:</dt>
+                                        <dd class="col-sm-6"><strong>@Model.RegisteredVoters.ToString("N0")</strong></dd>
+
+                                        <dt class="col-sm-6">Total des votes:</dt>
+                                        <dd class="col-sm-6"><strong>@Model.TotalVotes.ToString("N0")</strong></dd>
+
+                                        <dt class="col-sm-6">Taux de participation:</dt>
+                                        <dd class="col-sm-6">
+                                            <strong class="text-primary">@Model.TurnoutRate.ToString("F2")%</strong>
+                                        </dd>
+                                    </dl>
+
+                                    <!-- Barre de progression du taux de participation -->
+                                    <div class="mt-3">
+                                        <label class="form-label small">Taux de participation</label>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-primary" role="progressbar" 
+                                                 style="width: @Model.TurnoutRate%" 
+                                                 aria-valuenow="@Model.TurnoutRate" aria-valuemin="0" aria-valuemax="100">
+                                                @Model.TurnoutRate.ToString("F1")%
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Résultats par candidat -->
+                    @if (Model.ResultSubmissionDetails != null && Model.ResultSubmissionDetails.Any())
+                    {
+                        <div class="row">
+                            <div class="col-12 mb-4">
+                                <div class="card border-primary">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0"><i class="fas fa-users me-2"></i>Résultats par Candidat</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead class="table-dark">
+                                                    <tr>
+                                                        <th>Candidat</th>
+                                                        <th>Parti</th>
+                                                        <th>Votes</th>
+                                                        <th>Pourcentage</th>
+                                                        <th>Visualisation</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var detail in Model.ResultSubmissionDetails.OrderByDescending(d => d.Votes))
+                                                    {
+                                                        <tr>
+                                                            <td>
+                                                                <strong>
+                                                                    @if (detail.Candidate != null)
+                                                                    {
+                                                                        @detail.Candidate.FirstName @detail.Candidate.LastName
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <span class="text-muted">Candidat #@detail.CandidateId</span>
+                                                                    }
+                                                                </strong>
+                                                            </td>
+                                                            <td>
+                                                                @if (detail.Candidate != null)
+                                                                {
+                                                                    <span class="badge bg-info">@detail.Candidate.Party</span>
+                                                                }
+                                                            </td>
+                                                            <td><strong class="text-primary">@detail.Votes.ToString("N0")</strong></td>
+                                                            <td><strong>@detail.Percentage.ToString("F2")%</strong></td>
+                                                            <td>
+                                                                <div class="progress" style="height: 20px; min-width: 100px;">
+                                                                    <div class="progress-bar bg-success" role="progressbar" 
+                                                                         style="width: @detail.Percentage%"
+                                                                         aria-valuenow="@detail.Percentage" aria-valuemin="0" aria-valuemax="100">
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Documents attachés -->
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-paperclip me-2"></i>Documents Attachés 
+                                        <span class="badge bg-dark" id="documentBadge">Chargement...</span>
+                                    </h6>
+                                </div>
+                                <div class="card-body" id="documentsPreview">
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Chargement...</span>
+                                        </div>
+                                        <p class="mt-2 text-muted">Chargement des documents...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Observations -->
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <div class="row">
+                            <div class="col-12 mb-4">
+                                <div class="card border-secondary">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h6 class="mb-0"><i class="fas fa-comment-alt me-2"></i>Observations</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-0">@Model.Notes</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDocuments();
+        });
+
+        async function loadDocuments() {
+            try {
+                const response = await fetch(`/ResultSubmission/GetDocuments?submissionId=@Model.Id`);
+                const documents = await response.json();
+                
+                const documentCount = document.getElementById('documentCount');
+                const documentBadge = document.getElementById('documentBadge');
+                const documentsPreview = document.getElementById('documentsPreview');
+                
+                if (documents.error) {
+                    throw new Error(documents.error);
+                }
+
+                // Mettre à jour le compteur
+                documentCount.textContent = documents.length;
+                documentBadge.textContent = documents.length;
+                documentBadge.className = documents.length > 0 ? 'badge bg-success' : 'badge bg-secondary';
+
+                if (documents.length === 0) {
+                    documentsPreview.innerHTML = `
+                        <div class="text-center py-3">
+                            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-2">Aucun document attaché</p>
+                            <a href="/ResultSubmission/UploadDocument/@Model.Id" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-plus me-2"></i>Ajouter des documents
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    let html = '<div class="row">';
+                    
+                    // Afficher un aperçu des premiers documents
+                    documents.slice(0, 6).forEach(doc => {
+                        const icon = doc.isImage ? 
+                            `<img src="/${doc.filePath || ''}" alt="${doc.fileName}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">` :
+                            `<i class="${doc.icon} fa-2x"></i>`;
+                        
+                        html += `
+                            <div class="col-md-4 col-lg-2 mb-3">
+                                <div class="text-center">
+                                    <div class="mb-2">${icon}</div>
+                                    <small class="text-truncate d-block" style="max-width: 100px;" title="${doc.fileName}">
+                                        ${doc.fileName}
+                                    </small>
+                                    <small class="text-muted">${doc.documentType}</small>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    
+                    if (documents.length > 6) {
+                        html += `
+                            <div class="text-center mt-2">
+                                <small class="text-muted">... et ${documents.length - 6} autres documents</small>
+                            </div>
+                        `;
+                    }
+                    
+                    html += `
+                        <div class="text-center mt-3">
+                            <a href="/ResultSubmission/DocumentGallery/@Model.Id" class="btn btn-primary btn-sm">
+                                <i class="fas fa-images me-2"></i>Voir tous les documents
+                            </a>
+                        </div>
+                    `;
+                    
+                    documentsPreview.innerHTML = html;
+                }
+                
+            } catch (error) {
+                console.error('Erreur lors du chargement des documents:', error);
+                document.getElementById('documentCount').textContent = '?';
+                document.getElementById('documentBadge').textContent = 'Erreur';
+                document.getElementById('documentBadge').className = 'badge bg-danger';
+                
+                document.getElementById('documentsPreview').innerHTML = `
+                    <div class="text-center py-3">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                        <p class="text-muted mb-0">Impossible de charger les documents</p>
+                        <small class="text-muted">${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+    </script>
+}

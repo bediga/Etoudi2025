@@ -22,12 +22,15 @@ namespace VcBlazor.Data.Entities
         [Column("file_name")]
         public string FileName { get; set; } = string.Empty;
 
+        [Column("original_file_name")]
+        public string? OriginalFileName { get; set; }
+
         [Required]
         [Column("file_path")]
         public string FilePath { get; set; } = string.Empty;
 
         [Column("file_size")]
-        public int? FileSize { get; set; }
+        public long FileSize { get; set; }
 
         [Column("upload_date")]
         public DateTime UploadDate { get; set; } = DateTime.UtcNow;
@@ -35,8 +38,29 @@ namespace VcBlazor.Data.Entities
         [Column("checksum")]
         public string? Checksum { get; set; }
 
+        [Column("description")]
+        public string? Description { get; set; }
+
+        [Column("mime_type")]
+        public string? MimeType { get; set; }
+
+        [Column("is_image")]
+        public bool IsImage { get; set; } = false;
+
+        [Column("uploaded_by")]
+        public int? UploadedBy { get; set; }
+
+        [Column("status")]
+        public string Status { get; set; } = "active";
+
+        [Column("deleted_at")]
+        public DateTime? DeletedAt { get; set; }
+
         // Navigation properties
         [ForeignKey(nameof(SubmissionId))]
-        public virtual ResultSubmission ResultSubmission { get; set; } = null!;
+        public virtual ResultSubmission? Submission { get; set; }
+
+        [ForeignKey(nameof(UploadedBy))]
+        public virtual User? UploadedByUser { get; set; }
     }
 }

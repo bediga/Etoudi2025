@@ -35,6 +35,9 @@ namespace VcBlazor.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
+            // Debug : Log de la tentative de connexion
+            Console.WriteLine($"🔍 DEBUT LOGIN POST - Email: {model?.Email}, ReturnUrl: {returnUrl}");
+            
             ViewData["ReturnUrl"] = returnUrl;
 
             if (!ModelState.IsValid)
@@ -44,18 +47,31 @@ namespace VcBlazor.Controllers
 
             try
             {
+                // Debug : Vérifier si l'utilisateur existe
                 var user = await _authService.GetUserByEmailAsync(model.Email);
-                if (user == null || !await _authService.ValidateUserAsync(model.Email, model.Password))
+                if (user == null)
                 {
-                    ModelState.AddModelError(string.Empty, "Email ou mot de passe incorrect.");
+                    ModelState.AddModelError(string.Empty, $"❌ Aucun utilisateur trouvé avec l'email : {model.Email}");
                     return View(model);
                 }
 
-                if (!user.IsActive)
+                // Debug : Vérifier le mot de passe
+                bool isPasswordValid = await _authService.ValidateUserAsync(model.Email, model.Password);
+                if (!isPasswordValid)
                 {
-                    ModelState.AddModelError(string.Empty, "Votre compte est désactivé. Contactez l'administrateur.");
+                    ModelState.AddModelError(string.Empty, $"❌ Mot de passe incorrect pour : {model.Email}");
                     return View(model);
                 }
+
+                // Debug : Vérifier si le compte est actif
+                if (!user.IsActive)
+                {
+                    ModelState.AddModelError(string.Empty, $"⚠️ Compte désactivé pour : {model.Email}. Contactez l'administrateur.");
+                    return View(model);
+                }
+
+                // Debug : Success message
+                ViewBag.SuccessMessage = $"✅ Connexion réussie pour {user.FullName} ({user.Email}) - Rôle: {user.Role}";
 
                 // Créer les claims pour l'utilisateur
                 var claims = new List<Claim>
@@ -101,11 +117,13 @@ namespace VcBlazor.Controllers
                     return Redirect(returnUrl);
                 }
 
+                Console.WriteLine($"✅ LOGIN SUCCÈS - Redirection vers Home pour: {model?.Email}");
                 return RedirectToAction("Index", "Home");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erreur lors de la connexion pour: {Email}", model.Email);
+                Console.WriteLine($"❌ LOGIN ERREUR - Exception: {ex.Message} pour: {model?.Email}");
+                _logger.LogError(ex, "Erreur lors de la connexion pour: {Email}", model?.Email);
                 ModelState.AddModelError(string.Empty, "Une erreur s'est produite lors de la connexion.");
                 return View(model);
             }
@@ -308,7 +326,73 @@ namespace VcBlazor.Controllers
                 return RedirectToAction("Login");
             }
         }
+
+        /// <summary>
+        /// Action temporaire de debug pour vérifier l'état des utilisateurs
+        /// </summary>
+        [AllowAnonymous]
+        public async Task<IActionResult> DebugUsers()
+        {
+            try
+            {
+                // Test de l'utilisateur spécifique
+                var user = await _authService.GetUserByEmailAsync("bediga.jean@gisebs.com");
+                var isValid = await _authService.ValidateUserAsync("bediga.jean@gisebs.com", "Admin123");
+
+                var debugInfo = new
+                {
+                    UserFound = user != null,
+                    UserInfo = user != null ? new
+                    {
+                        Email = user.Email,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Role = user.Role,
+                        IsActive = user.IsActive
+                    } : null,
+                    PasswordValid = isValid
+                };
+
+                return Json(debugInfo);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
 #endif
+
+        [HttpGet]
+        public async Task<IActionResult> DebugUser(string email = "bediga.jean@gisebs.com")
+        {
+            try
+            {
+                var user = await _authService.GetUserByEmailAsync(email);
+                
+                ViewBag.DebugInfo = user != null 
+                    ? $"✅ Utilisateur trouvé: {user.FullName} ({user.Email}), Actif: {user.IsActive}, Rôle: {user.Role}, ID: {user.Id}"
+                    : $"❌ Aucun utilisateur trouvé avec l'email: {email}";
+
+                // Tester le mot de passe
+                if (user != null)
+                {
+                    var isValidPassword = await _authService.ValidateUserAsync(email, "Admin123");
+                    ViewBag.PasswordTest = isValidPassword 
+                        ? "✅ Mot de passe 'Admin123' est valide" 
+                        : "❌ Mot de passe 'Admin123' est invalide";
+                }
+
+                return Json(new { 
+                    userFound = user != null,
+                    userInfo = ViewBag.DebugInfo,
+                    passwordTest = ViewBag.PasswordTest ?? "N/A"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
     }
 
     // ViewModels pour les formulaires

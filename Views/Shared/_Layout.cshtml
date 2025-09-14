@@ -12,7 +12,7 @@
     <link href="https://cdn.syncfusion.com/ej2/bootstrap5.css" rel="stylesheet" />
     
     <!-- Font Awesome pour les icônes -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="~/lib/font-awesome/css/all.min.css" rel="stylesheet" />
     
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -32,10 +32,13 @@
                                 <i class="fas fa-home"></i> Accueil
                             </a>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" id="electionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-vote-yea"></i> Élection
-                            </a>
+                        
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" id="electionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-vote-yea"></i> Élection
+                                </a>
                             <ul class="dropdown-menu" aria-labelledby="electionDropdown">
                                 <li><a class="dropdown-item" asp-controller="Election" asp-action="Dashboard">
                                     <i class="fas fa-tachometer-alt"></i> Tableau de bord
@@ -44,6 +47,13 @@
                                 <li><a class="dropdown-item" asp-controller="Candidate" asp-action="Index">
                                     <i class="fas fa-users"></i> Candidats
                                 </a></li>
+                                <li><a class="dropdown-item" asp-controller="ResultSubmission" asp-action="PollingStationSubmit">
+                                    <i class="fas fa-poll-h"></i> Soumettre Résultats
+                                </a></li>
+                                <li><a class="dropdown-item" asp-controller="ResultSubmission" asp-action="Index">
+                                    <i class="fas fa-list-alt"></i> Soumissions
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" asp-controller="ElectionResult" asp-action="Index">
                                     <i class="fas fa-chart-bar"></i> Résultats
                                 </a></li>
@@ -55,11 +65,11 @@
                                 </a></li>
                             </ul>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" id="configDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-cogs"></i> Configuration Administrative
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="configDropdown">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" id="configDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-cogs"></i> Configuration Administrative
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="configDropdown">
                                 <li class="dropdown-header">
                                     <i class="fas fa-map"></i> Découpage Territorial
                                 </li>
@@ -104,11 +114,58 @@
                                 </a></li>
                             </ul>
                         </li>
+                        }
+                        
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">
                                 <i class="fas fa-shield-alt"></i> Confidentialité
                             </a>
                         </li>
+                    </ul>
+                    
+                    <!-- Boutons d'authentification -->
+                    <ul class="navbar-nav ms-auto">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user"></i> @(User.Identity.Name ?? "Utilisateur")
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li><a class="dropdown-item" href="#" onclick="event.preventDefault();">
+                                        <i class="fas fa-info-circle"></i> Connecté en tant que: <strong>@(User.Identity.Name ?? "Utilisateur")</strong>
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" asp-controller="User" asp-action="Profile">
+                                        <i class="fas fa-user-edit"></i> Mon Profil
+                                    </a></li>
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">
+                                        <i class="fas fa-key"></i> Changer le mot de passe
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="fas fa-sign-out-alt"></i> Se déconnecter
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">
+                                    <i class="fas fa-sign-in-alt"></i> Se connecter
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-primary" asp-controller="Account" asp-action="CreateSuperAdmin">
+                                    <i class="fas fa-user-shield"></i> Créer Admin
+                                </a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

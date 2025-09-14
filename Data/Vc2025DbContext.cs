@@ -86,7 +86,7 @@ namespace VcBlazor.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<SubmissionDocument>()
-                .HasOne(sd => sd.ResultSubmission)
+                .HasOne(sd => sd.Submission)
                 .WithMany(rs => rs.SubmissionDocuments)
                 .HasForeignKey(sd => sd.SubmissionId)
                 .OnDelete(DeleteBehavior.Cascade);

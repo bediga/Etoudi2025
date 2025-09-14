@@ -165,8 +165,9 @@
                     </div>
                     
                     <div class="p-4">
-                        <form asp-action="Login" method="post">
-                            <div asp-validation-summary="All" class="alert alert-danger" role="alert" style="display: none;"></div>
+                        <form asp-action="Login" method="post" id="loginForm">
+                            @Html.AntiForgeryToken()
+                            <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
                             
                             @if (!string.IsNullOrEmpty(TempData["Error"] as string))
                             {
@@ -181,6 +182,14 @@
                                 <div class="alert alert-success" role="alert">
                                     <i class="fas fa-check-circle me-2"></i>
                                     @TempData["Success"]
+                                </div>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage as string))
+                            {
+                                <div class="alert alert-success" role="alert">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    @ViewBag.SuccessMessage
                                 </div>
                             }
 
@@ -257,8 +266,8 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/jquery.validate.min.js"></script>
-    <script src="~/js/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
     
     <script>
         // Animation d'entrée
@@ -277,14 +286,14 @@
             document.getElementById('email').focus();
         });
 
-        // Gestion des erreurs de validation
-        $('form').submit(function() {
-            const errorSummary = $('.validation-summary-errors, [data-valmsg-summary="true"]');
-            if (errorSummary.length && errorSummary.find('li').length) {
-                errorSummary.show();
-                errorSummary.get(0).scrollIntoView();
-                return false;
-            }
+        // Debug de soumission de formulaire
+        $('#loginForm').submit(function(e) {
+            console.log('🔍 Formulaire de connexion soumis !');
+            console.log('Email:', $('#email').val());
+            console.log('Password:', $('#password').val() ? '****' : 'VIDE');
+            
+            // Laisser la soumission normale
+            return true;
         });
     </script>
 </body>

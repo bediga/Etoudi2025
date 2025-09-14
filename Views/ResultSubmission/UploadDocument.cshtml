@@ -1,0 +1,388 @@
+@model int
+@{
+    ViewData["Title"] = "Téléchargement de Documents";
+    var submission = ViewBag.Submission as VcBlazor.Data.Entities.ResultSubmission;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>
+                        Téléchargement de Documents
+                        @if (submission != null)
+                        {
+                            <small class="ms-2">- Soumission #@submission.Id</small>
+                        }
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Informations sur les types de fichiers autorisés -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>Types de documents acceptés :</h6>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <strong>PV (Procès-Verbal)</strong><br>
+                                        <small>PDF, Word (max 10MB)</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Compte-rendu</strong><br>
+                                        <small>PDF, Word, Texte (max 10MB)</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Photos</strong><br>
+                                        <small>JPG, PNG, GIF (max 5MB)</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Autres Documents</strong><br>
+                                        <small>PDF, Office, Texte (max 10MB)</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form asp-action="UploadDocument" method="post" enctype="multipart/form-data" id="uploadForm">
+                        <input type="hidden" name="submissionId" value="@ViewBag.SubmissionId" />
+
+                        <!-- Zone de téléchargement multiple -->
+                        <div class="card border-primary mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="fas fa-cloud-upload-alt me-2"></i>Sélection de Fichiers</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="fileInputsContainer">
+                                    <!-- Premier groupe de fichier -->
+                                    <div class="file-group border rounded p-3 mb-3" data-index="0">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-bold">Fichier</label>
+                                                <input type="file" name="files" class="form-control file-input" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.xls,.xlsx" required>
+                                                <div class="file-preview mt-2" style="display: none;">
+                                                    <img class="preview-img" src="" alt="Preview" style="max-width: 100px; max-height: 100px; border-radius: 5px;">
+                                                    <div class="file-info">
+                                                        <small class="text-muted file-details"></small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-bold">Type de Document</label>
+                                                <select name="documentTypes" class="form-select" required>
+                                                    <option value="">-- Sélectionner --</option>
+                                                    <option value="pv">PV (Procès-Verbal)</option>
+                                                    <option value="compte_rendu">Compte-rendu</option>
+                                                    <option value="photo">Photo</option>
+                                                    <option value="document">Autre Document</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-bold">Description</label>
+                                                <input type="text" name="descriptions" class="form-control" placeholder="Description du document...">
+                                            </div>
+                                            <div class="col-md-1 d-flex align-items-end">
+                                                <button type="button" class="btn btn-outline-danger btn-sm remove-file" style="display: none;">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-center mb-3">
+                                    <button type="button" class="btn btn-outline-primary" id="addFileBtn">
+                                        <i class="fas fa-plus me-2"></i>Ajouter un autre fichier
+                                    </button>
+                                </div>
+
+                                <!-- Zone de glisser-déposer -->
+                                <div class="drop-zone border border-dashed border-primary rounded p-4 text-center mb-3" id="dropZone">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                    <p class="mb-2"><strong>Glissez et déposez vos fichiers ici</strong></p>
+                                    <p class="text-muted mb-0">ou utilisez les champs ci-dessus</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress bar -->
+                        <div class="progress mb-3" style="display: none;" id="uploadProgress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@ViewBag.SubmissionId" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour aux détails
+                            </a>
+
+                            <div>
+                                <a asp-action="DocumentGallery" asp-route-id="@ViewBag.SubmissionId" class="btn btn-outline-info me-2">
+                                    <i class="fas fa-images me-2"></i>Voir la galerie
+                                </a>
+                                <button type="submit" class="btn btn-success" id="submitBtn">
+                                    <i class="fas fa-upload me-2"></i>Télécharger les documents
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let fileGroupIndex = 1;
+            const container = document.getElementById('fileInputsContainer');
+            const addBtn = document.getElementById('addFileBtn');
+            const dropZone = document.getElementById('dropZone');
+            const uploadForm = document.getElementById('uploadForm');
+            const progressBar = document.getElementById('uploadProgress');
+
+            // Ajouter un nouveau groupe de fichier
+            addBtn.addEventListener('click', function() {
+                const newGroup = createFileGroup(fileGroupIndex++);
+                container.appendChild(newGroup);
+                updateRemoveButtons();
+            });
+
+            // Créer un nouveau groupe de fichier
+            function createFileGroup(index) {
+                const div = document.createElement('div');
+                div.className = 'file-group border rounded p-3 mb-3';
+                div.setAttribute('data-index', index);
+                div.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Fichier</label>
+                            <input type="file" name="files" class="form-control file-input" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.xls,.xlsx">
+                            <div class="file-preview mt-2" style="display: none;">
+                                <img class="preview-img" src="" alt="Preview" style="max-width: 100px; max-height: 100px; border-radius: 5px;">
+                                <div class="file-info">
+                                    <small class="text-muted file-details"></small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Type de Document</label>
+                            <select name="documentTypes" class="form-select">
+                                <option value="">-- Sélectionner --</option>
+                                <option value="pv">PV (Procès-Verbal)</option>
+                                <option value="compte_rendu">Compte-rendu</option>
+                                <option value="photo">Photo</option>
+                                <option value="document">Autre Document</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Description</label>
+                            <input type="text" name="descriptions" class="form-control" placeholder="Description du document...">
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-file">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Ajouter les événements au nouveau groupe
+                const fileInput = div.querySelector('.file-input');
+                const removeBtn = div.querySelector('.remove-file');
+
+                fileInput.addEventListener('change', handleFileSelect);
+                removeBtn.addEventListener('click', function() {
+                    div.remove();
+                    updateRemoveButtons();
+                });
+
+                return div;
+            }
+
+            // Gérer la sélection de fichiers
+            function handleFileSelect(e) {
+                const file = e.target.files[0];
+                const group = e.target.closest('.file-group');
+                const preview = group.querySelector('.file-preview');
+                const img = group.querySelector('.preview-img');
+                const details = group.querySelector('.file-details');
+                const typeSelect = group.querySelector('select[name="documentTypes"]');
+
+                if (file) {
+                    // Afficher les détails du fichier
+                    const size = (file.size / 1024 / 1024).toFixed(2);
+                    details.textContent = `${file.name} (${size} MB)`;
+
+                    // Suggérer le type de document
+                    if (file.type.startsWith('image/')) {
+                        typeSelect.value = 'photo';
+                        
+                        // Prévisualiser l'image
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            img.src = e.target.result;
+                            img.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else if (file.type === 'application/pdf' || file.name.toLowerCase().includes('pv')) {
+                        typeSelect.value = 'pv';
+                        img.style.display = 'none';
+                    } else {
+                        typeSelect.value = 'document';
+                        img.style.display = 'none';
+                    }
+
+                    preview.style.display = 'block';
+                }
+            }
+
+            // Mettre à jour la visibilité des boutons de suppression
+            function updateRemoveButtons() {
+                const groups = container.querySelectorAll('.file-group');
+                groups.forEach((group, index) => {
+                    const removeBtn = group.querySelector('.remove-file');
+                    removeBtn.style.display = groups.length > 1 ? 'block' : 'none';
+                });
+            }
+
+            // Glisser-déposer
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight(e) {
+                dropZone.classList.add('border-success', 'bg-light');
+            }
+
+            function unhighlight(e) {
+                dropZone.classList.remove('border-success', 'bg-light');
+            }
+
+            dropZone.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                for (let i = 0; i < files.length; i++) {
+                    if (i === 0 && container.querySelector('.file-input').files.length === 0) {
+                        // Utiliser le premier groupe existant
+                        const firstInput = container.querySelector('.file-input');
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(files[i]);
+                        firstInput.files = dataTransfer.files;
+                        firstInput.dispatchEvent(new Event('change'));
+                    } else {
+                        // Créer de nouveaux groupes
+                        const newGroup = createFileGroup(fileGroupIndex++);
+                        container.appendChild(newGroup);
+                        
+                        const input = newGroup.querySelector('.file-input');
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(files[i]);
+                        input.files = dataTransfer.files;
+                        input.dispatchEvent(new Event('change'));
+                    }
+                }
+                
+                updateRemoveButtons();
+            }
+
+            // Gestion de la soumission avec progress
+            uploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(uploadForm);
+                const hasFiles = Array.from(formData.getAll('files')).some(file => file.size > 0);
+                
+                if (!hasFiles) {
+                    alert('Veuillez sélectionner au moins un fichier.');
+                    return;
+                }
+
+                // Afficher la barre de progression
+                progressBar.style.display = 'block';
+                const progressBarFill = progressBar.querySelector('.progress-bar');
+
+                // Simuler le progrès (remplacer par XMLHttpRequest pour vrai progrès)
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    progressBarFill.style.width = progress + '%';
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        uploadForm.submit();
+                    }
+                }, 200);
+            });
+
+            // Initialiser les événements pour le premier groupe
+            const firstFileInput = container.querySelector('.file-input');
+            if (firstFileInput) {
+                firstFileInput.addEventListener('change', handleFileSelect);
+            }
+            
+            updateRemoveButtons();
+        });
+    </script>
+
+    <style>
+        .drop-zone {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .drop-zone:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .file-group {
+            transition: all 0.3s ease;
+        }
+        
+        .file-group:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .preview-img {
+            border: 2px solid #dee2e6;
+        }
+    </style>
+}

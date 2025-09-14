@@ -1,0 +1,380 @@
+@model VcBlazor.Models.ResultSubmissionViewModel
+@{
+    ViewData["Title"] = "Soumission des Résultats - Bureau de Vote";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-poll-h me-2"></i>
+                        Soumission des Résultats Électoraux
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["DatabaseError"] != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <i class="fas fa-database me-2"></i>
+                            <strong>Problème de connexion à la base de données :</strong><br>
+                            @TempData["DatabaseError"]<br>
+                            <small class="mt-2 d-block">
+                                <i class="fas fa-info-circle me-1"></i>
+                                La fonctionnalité de soumission des résultats nécessite une connexion active à la base de données PostgreSQL.
+                                Veuillez vérifier la configuration de la base de données dans appsettings.json.
+                            </small>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="PollingStationSubmit" method="post" id="resultForm" class="needs-validation" novalidate>
+                        @Html.AntiForgeryToken()
+                        
+                        <!-- Informations du Bureau de Vote -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card border-info">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0"><i class="fas fa-building me-2"></i>Bureau de Vote</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label asp-for="PollingStationId" class="form-label fw-bold"></label>
+                                            <select asp-for="PollingStationId" class="form-select" id="pollingStationSelect" required>
+                                                <option value="">-- Sélectionner un bureau --</option>
+                                                @if (ViewBag.PollingStations != null)
+                                                {
+                                                    @foreach (var station in ViewBag.PollingStations)
+                                                    {
+                                                        <option value="@station.Id" data-registered="@station.RegisteredVoters" selected="@(Model.PollingStationId == station.Id)">
+                                                            @station.Name (@station.RegisteredVoters électeurs)
+                                                        </option>
+                                                    }
+                                                }
+                                            </select>
+                                            <span asp-validation-for="PollingStationId" class="text-danger"></span>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label asp-for="RegisteredVoters" class="form-label fw-bold"></label>
+                                            <input asp-for="RegisteredVoters" class="form-control" id="registeredVoters" readonly />
+                                            <span asp-validation-for="RegisteredVoters" class="text-danger"></span>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label asp-for="SubmissionType" class="form-label fw-bold"></label>
+                                            <select asp-for="SubmissionType" class="form-select">
+                                                <option value="final">Résultats Finaux</option>
+                                                <option value="preliminary">Résultats Préliminaires</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card border-success">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistiques Générales</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label asp-for="TotalVotes" class="form-label fw-bold"></label>
+                                                    <input asp-for="TotalVotes" class="form-control" id="totalVotes" min="0" required />
+                                                    <span asp-validation-for="TotalVotes" class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Taux de participation</label>
+                                                    <input type="text" class="form-control" id="turnoutRate" readonly placeholder="0.00%" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label asp-for="BlankVotes" class="form-label fw-bold"></label>
+                                                    <input asp-for="BlankVotes" class="form-control" id="blankVotes" min="0" />
+                                                    <span asp-validation-for="BlankVotes" class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label asp-for="InvalidVotes" class="form-label fw-bold"></label>
+                                                    <input asp-for="InvalidVotes" class="form-control" id="invalidVotes" min="0" />
+                                                    <span asp-validation-for="InvalidVotes" class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Résultats par Candidat -->
+                        <div class="card border-warning mb-4">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Résultats par Candidat</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="candidateResults">
+                                    @if (ViewBag.Candidates != null && ViewBag.Candidates.GetType().IsArray && ((Array)ViewBag.Candidates).Length > 0)
+                                    {
+                                        <div class="row">
+                                            @foreach (var candidate in ViewBag.Candidates)
+                                            {
+                                                <div class="col-md-4 mb-3">
+                                                    <div class="candidate-card border rounded p-3">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <div class="candidate-avatar me-3">
+                                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                                    @candidate.FirstName[0]@candidate.LastName[0]
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                <h6 class="mb-0">@candidate.FirstName @candidate.LastName</h6>
+                                                                <small class="text-muted">@candidate.Party</small>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <input type="hidden" name="CandidateResults[@ViewBag.Candidates.ToList().IndexOf(candidate)].CandidateId" value="@candidate.Id" />
+                                                        <input type="hidden" name="CandidateResults[@ViewBag.Candidates.ToList().IndexOf(candidate)].CandidateName" value="@candidate.FirstName @candidate.LastName" />
+                                                        <input type="hidden" name="CandidateResults[@ViewBag.Candidates.ToList().IndexOf(candidate)].Party" value="@candidate.Party" />
+                                                        
+                                                        <div class="mb-2">
+                                                            <label class="form-label fw-bold">Votes</label>
+                                                            <input type="number" 
+                                                                   name="CandidateResults[@ViewBag.Candidates.ToList().IndexOf(candidate)].Votes"
+                                                                   class="form-control candidate-votes" 
+                                                                   min="0" value="0" 
+                                                                   data-candidate-id="@candidate.Id" />
+                                                        </div>
+                                                        
+                                                        <div>
+                                                            <small class="text-muted">Pourcentage: </small>
+                                                            <span class="candidate-percentage fw-bold">0.00%</span>
+                                                            <input type="hidden" 
+                                                                   name="CandidateResults[@ViewBag.Candidates.ToList().IndexOf(candidate)].Percentage"
+                                                                   class="candidate-percentage-input" value="0" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <strong>Aucun candidat disponible</strong><br>
+                                            Impossible de charger la liste des candidats depuis la base de données. 
+                                            Veuillez vérifier la connexion à la base de données PostgreSQL.
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Validation Summary -->
+                        <div class="card border-danger mb-4" id="validationSummary" style="display: none;">
+                            <div class="card-header bg-danger text-white">
+                                <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Erreurs de Validation</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul id="validationErrors" class="mb-0"></ul>
+                            </div>
+                        </div>
+
+                        <!-- Observations -->
+                        <div class="mb-4">
+                            <label asp-for="Notes" class="form-label fw-bold"></label>
+                            <textarea asp-for="Notes" class="form-control" rows="4" 
+                                      placeholder="Observations ou commentaires sur le processus de vote..."></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                            </a>
+                            
+                            <div>
+                                <button type="button" class="btn btn-outline-primary me-2" id="validateBtn">
+                                    <i class="fas fa-check me-2"></i>Valider les données
+                                </button>
+                                <button type="submit" class="btn btn-success" id="submitBtn">
+                                    <i class="fas fa-paper-plane me-2"></i>Soumettre les résultats
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const pollingStationSelect = document.getElementById('pollingStationSelect');
+            const registeredVotersInput = document.getElementById('registeredVoters');
+            const totalVotesInput = document.getElementById('totalVotes');
+            const turnoutRateInput = document.getElementById('turnoutRate');
+            const candidateVotesInputs = document.querySelectorAll('.candidate-votes');
+            const validateBtn = document.getElementById('validateBtn');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Mise à jour des électeurs inscrits selon le bureau sélectionné
+            pollingStationSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const registeredVoters = selectedOption.getAttribute('data-registered') || '0';
+                registeredVotersInput.value = registeredVoters;
+                calculateTurnoutRate();
+            });
+
+            // Calcul automatique du taux de participation
+            function calculateTurnoutRate() {
+                const registered = parseInt(registeredVotersInput.value) || 0;
+                const total = parseInt(totalVotesInput.value) || 0;
+                
+                if (registered > 0) {
+                    const rate = (total / registered * 100).toFixed(2);
+                    turnoutRateInput.value = rate + '%';
+                }
+            }
+
+            // Calcul des pourcentages par candidat
+            function calculatePercentages() {
+                const totalVotes = parseInt(totalVotesInput.value) || 0;
+                
+                candidateVotesInputs.forEach(input => {
+                    const votes = parseInt(input.value) || 0;
+                    const percentage = totalVotes > 0 ? (votes / totalVotes * 100).toFixed(2) : '0.00';
+                    
+                    const card = input.closest('.candidate-card');
+                    const percentageSpan = card.querySelector('.candidate-percentage');
+                    const percentageInput = card.querySelector('.candidate-percentage-input');
+                    
+                    percentageSpan.textContent = percentage + '%';
+                    percentageInput.value = parseFloat(percentage);
+                });
+            }
+
+            // Validation des données
+            function validateData() {
+                const errors = [];
+                const registered = parseInt(registeredVotersInput.value) || 0;
+                const total = parseInt(totalVotesInput.value) || 0;
+                const blank = parseInt(document.getElementById('blankVotes').value) || 0;
+                const invalid = parseInt(document.getElementById('invalidVotes').value) || 0;
+                
+                let candidateTotal = 0;
+                candidateVotesInputs.forEach(input => {
+                    candidateTotal += parseInt(input.value) || 0;
+                });
+
+                if (total > registered) {
+                    errors.push('Le total des votes ne peut pas dépasser les électeurs inscrits');
+                }
+
+                if (candidateTotal + blank + invalid !== total) {
+                    errors.push('La somme des votes candidats + blancs + nuls doit égaler le total');
+                }
+
+                if (candidateTotal < 0 || blank < 0 || invalid < 0) {
+                    errors.push('Tous les nombres doivent être positifs');
+                }
+
+                return errors;
+            }
+
+            // Afficher les erreurs de validation
+            function showValidationErrors(errors) {
+                const summaryDiv = document.getElementById('validationSummary');
+                const errorsList = document.getElementById('validationErrors');
+                
+                if (errors.length > 0) {
+                    errorsList.innerHTML = errors.map(error => `<li>${error}</li>`).join('');
+                    summaryDiv.style.display = 'block';
+                    summaryDiv.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    summaryDiv.style.display = 'none';
+                }
+            }
+
+            // Event listeners
+            totalVotesInput.addEventListener('input', function() {
+                calculateTurnoutRate();
+                calculatePercentages();
+            });
+
+            candidateVotesInputs.forEach(input => {
+                input.addEventListener('input', calculatePercentages);
+            });
+
+            validateBtn.addEventListener('click', function() {
+                const errors = validateData();
+                showValidationErrors(errors);
+                
+                if (errors.length === 0) {
+                    alert('✅ Validation réussie! Les données sont cohérentes.');
+                }
+            });
+
+            // Validation avant soumission
+            document.getElementById('resultForm').addEventListener('submit', function(e) {
+                const errors = validateData();
+                
+                if (errors.length > 0) {
+                    e.preventDefault();
+                    showValidationErrors(errors);
+                    return false;
+                }
+
+                // Confirmation avant soumission
+                if (!confirm('Êtes-vous sûr de vouloir soumettre ces résultats? Cette action ne peut pas être annulée.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Initialisation
+            if (pollingStationSelect.value) {
+                const selectedOption = pollingStationSelect.options[pollingStationSelect.selectedIndex];
+                const registeredVoters = selectedOption.getAttribute('data-registered');
+                if (registeredVoters) {
+                    registeredVotersInput.value = registeredVoters;
+                }
+            }
+        });
+    </script>
+}

@@ -1,0 +1,439 @@
+@model List<VcBlazor.Data.Entities.SubmissionDocument>
+@{
+    ViewData["Title"] = "Galerie de Documents";
+    var submission = ViewBag.Submission as VcBlazor.Data.Entities.ResultSubmission;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-images me-2"></i>
+                            Galerie de Documents
+                            @if (submission != null)
+                            {
+                                <small class="ms-2">- Soumission #@submission.Id</small>
+                            }
+                        </h4>
+                        <div>
+                            <span class="badge bg-light text-dark fs-6">@Model.Count document(s)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Actions rapides -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="btn-toolbar" role="toolbar">
+                                <div class="btn-group me-2" role="group">
+                                    <a asp-action="UploadDocument" asp-route-id="@submission?.Id" class="btn btn-success">
+                                        <i class="fas fa-plus me-2"></i>Ajouter des documents
+                                    </a>
+                                </div>
+                                <div class="btn-group me-2" role="group">
+                                    <button type="button" class="btn btn-outline-primary" id="filterBtn">
+                                        <i class="fas fa-filter me-2"></i>Filtrer
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" id="viewToggle" data-view="grid">
+                                        <i class="fas fa-th-list me-2"></i>Vue liste
+                                    </button>
+                                </div>
+                                <div class="btn-group" role="group">
+                                    <a asp-action="Details" asp-route-id="@submission?.Id" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-2"></i>Retour
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filtres -->
+                    <div class="row mb-3" id="filtersRow" style="display: none;">
+                        <div class="col-md-3">
+                            <select class="form-select" id="typeFilter">
+                                <option value="">Tous les types</option>
+                                <option value="pv">PV</option>
+                                <option value="compte_rendu">Compte-rendu</option>
+                                <option value="photo">Photos</option>
+                                <option value="document">Autres documents</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" class="form-control" id="dateFilter" placeholder="Date d'upload">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" id="searchFilter" placeholder="Rechercher dans les noms et descriptions...">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-outline-danger" id="clearFilters">
+                                <i class="fas fa-times"></i> Effacer
+                            </button>
+                        </div>
+                    </div>
+
+                    @if (Model.Any())
+                    {
+                        <!-- Vue grille (par défaut) -->
+                        <div id="gridView" class="documents-grid">
+                            <div class="row" id="documentsContainer">
+                                @foreach (var document in Model)
+                                {
+                                    <div class="col-xl-3 col-lg-4 col-md-6 mb-4 document-item" 
+                                         data-type="@document.DocumentType" 
+                                         data-date="@document.UploadDate.ToString("yyyy-MM-dd")"
+                                         data-search="@document.FileName.ToLower() @document.Description?.ToLower()">
+                                        
+                                        <div class="card h-100 document-card">
+                                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-primary">@GetDocumentTypeLabel(document.DocumentType)</span>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a class="dropdown-item" asp-action="DownloadDocument" asp-route-id="@document.Id">
+                                                                <i class="fas fa-download me-2"></i>Télécharger
+                                                            </a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <form asp-action="DeleteDocument" method="post" class="d-inline">
+                                                                <input type="hidden" name="id" value="@document.Id" />
+                                                                <input type="hidden" name="submissionId" value="@submission?.Id" />
+                                                                <button type="submit" class="dropdown-item text-danger" 
+                                                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce document ?')">
+                                                                    <i class="fas fa-trash me-2"></i>Supprimer
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+                                            <div class="card-body text-center">
+                                                @if (document.IsImage)
+                                                {
+                                                    <div class="document-thumbnail mb-3">
+                                                        <img src="/@document.FilePath" alt="@document.FileName" 
+                                                             class="img-fluid rounded preview-image" 
+                                                             style="max-height: 150px; cursor: pointer;"
+                                                             data-bs-toggle="modal" data-bs-target="#imageModal"
+                                                             onclick="showImageModal('@document.FilePath', '@document.FileName')">
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="document-icon mb-3">
+                                                        <i class="@GetFileIcon(document.MimeType) fa-4x"></i>
+                                                    </div>
+                                                }
+
+                                                <h6 class="card-title text-truncate" title="@document.FileName">
+                                                    @document.FileName
+                                                </h6>
+
+                                                @if (!string.IsNullOrEmpty(document.Description))
+                                                {
+                                                    <p class="card-text text-muted small">@document.Description</p>
+                                                }
+
+                                                <div class="document-info">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        @document.UploadDate.ToString("dd/MM/yyyy HH:mm")
+                                                    </small><br>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-hdd me-1"></i>
+                                                        @FormatFileSize(document.FileSize)
+                                                    </small>
+                                                </div>
+                                            </div>
+
+                                            <div class="card-footer bg-transparent">
+                                                <div class="d-grid">
+                                                    <a asp-action="DownloadDocument" asp-route-id="@document.Id" 
+                                                       class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-download me-2"></i>Télécharger
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Vue liste -->
+                        <div id="listView" style="display: none;">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Nom du fichier</th>
+                                            <th>Description</th>
+                                            <th>Taille</th>
+                                            <th>Date d'upload</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="listViewBody">
+                                        @foreach (var document in Model)
+                                        {
+                                            <tr class="document-row" 
+                                                data-type="@document.DocumentType" 
+                                                data-date="@document.UploadDate.ToString("yyyy-MM-dd")"
+                                                data-search="@document.FileName.ToLower() @document.Description?.ToLower()">
+                                                <td>
+                                                    <span class="badge bg-primary">@GetDocumentTypeLabel(document.DocumentType)</span>
+                                                </td>
+                                                <td>
+                                                    <i class="@GetFileIcon(document.MimeType) me-2"></i>
+                                                    @document.FileName
+                                                </td>
+                                                <td>@document.Description</td>
+                                                <td>@FormatFileSize(document.FileSize)</td>
+                                                <td>@document.UploadDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        <a asp-action="DownloadDocument" asp-route-id="@document.Id" 
+                                                           class="btn btn-outline-primary">
+                                                            <i class="fas fa-download"></i>
+                                                        </a>
+                                                        <form asp-action="DeleteDocument" method="post" class="d-inline">
+                                                            <input type="hidden" name="id" value="@document.Id" />
+                                                            <input type="hidden" name="submissionId" value="@submission?.Id" />
+                                                            <button type="submit" class="btn btn-outline-danger" 
+                                                                    onclick="return confirm('Supprimer ce document ?')">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucun document trouvé</h5>
+                            <p class="text-muted">Commencez par ajouter des documents à cette soumission.</p>
+                            <a asp-action="UploadDocument" asp-route-id="@submission?.Id" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Ajouter des documents
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour affichage des images -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Aperçu de l'image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="" class="img-fluid">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <a id="modalDownloadBtn" href="#" class="btn btn-primary">
+                    <i class="fas fa-download me-2"></i>Télécharger
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterBtn = document.getElementById('filterBtn');
+            const filtersRow = document.getElementById('filtersRow');
+            const viewToggle = document.getElementById('viewToggle');
+            const gridView = document.getElementById('gridView');
+            const listView = document.getElementById('listView');
+            const typeFilter = document.getElementById('typeFilter');
+            const dateFilter = document.getElementById('dateFilter');
+            const searchFilter = document.getElementById('searchFilter');
+            const clearFilters = document.getElementById('clearFilters');
+
+            // Gestion des filtres
+            if (filterBtn) {
+                filterBtn.addEventListener('click', function() {
+                    filtersRow.style.display = filtersRow.style.display === 'none' ? 'flex' : 'none';
+                });
+            }
+
+            // Basculer entre vue grille et liste
+            if (viewToggle) {
+                viewToggle.addEventListener('click', function() {
+                    const currentView = this.getAttribute('data-view');
+                    
+                    if (currentView === 'grid') {
+                        gridView.style.display = 'none';
+                        listView.style.display = 'block';
+                        this.setAttribute('data-view', 'list');
+                        this.innerHTML = '<i class="fas fa-th me-2"></i>Vue grille';
+                    } else {
+                        gridView.style.display = 'block';
+                        listView.style.display = 'none';
+                        this.setAttribute('data-view', 'grid');
+                        this.innerHTML = '<i class="fas fa-th-list me-2"></i>Vue liste';
+                    }
+                });
+            }
+
+            // Fonction de filtrage
+            function filterDocuments() {
+                const typeValue = typeFilter.value.toLowerCase();
+                const dateValue = dateFilter.value;
+                const searchValue = searchFilter.value.toLowerCase();
+
+                const items = document.querySelectorAll('.document-item, .document-row');
+                
+                items.forEach(item => {
+                    const itemType = item.getAttribute('data-type')?.toLowerCase() || '';
+                    const itemDate = item.getAttribute('data-date') || '';
+                    const itemSearch = item.getAttribute('data-search') || '';
+
+                    const typeMatch = !typeValue || itemType.includes(typeValue);
+                    const dateMatch = !dateValue || itemDate === dateValue;
+                    const searchMatch = !searchValue || itemSearch.includes(searchValue);
+
+                    if (typeMatch && dateMatch && searchMatch) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            }
+
+            // Événements de filtrage
+            [typeFilter, dateFilter, searchFilter].forEach(element => {
+                if (element) {
+                    element.addEventListener('change', filterDocuments);
+                    element.addEventListener('input', filterDocuments);
+                }
+            });
+
+            // Effacer les filtres
+            if (clearFilters) {
+                clearFilters.addEventListener('click', function() {
+                    typeFilter.value = '';
+                    dateFilter.value = '';
+                    searchFilter.value = '';
+                    filterDocuments();
+                });
+            }
+        });
+
+        // Fonction pour afficher l'image dans le modal
+        function showImageModal(imagePath, fileName) {
+            const modalImage = document.getElementById('modalImage');
+            const modalTitle = document.getElementById('imageModalLabel');
+            const modalDownloadBtn = document.getElementById('modalDownloadBtn');
+            
+            modalImage.src = '/' + imagePath;
+            modalTitle.textContent = fileName;
+            modalDownloadBtn.href = '/' + imagePath;
+        }
+    </script>
+
+    <style>
+        .document-card {
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .document-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .preview-image {
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .preview-image:hover {
+            transform: scale(1.05);
+        }
+        
+        .document-icon {
+            color: #6c757d;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+}
+
+@functions {
+    private string GetDocumentTypeLabel(string documentType)
+    {
+        return documentType switch
+        {
+            "pv" => "PV",
+            "compte_rendu" => "Compte-rendu",
+            "photo" => "Photo",
+            "document" => "Document",
+            _ => "Autre"
+        };
+    }
+
+    private string GetFileIcon(string? mimeType)
+    {
+        return mimeType switch
+        {
+            "application/pdf" => "fas fa-file-pdf text-danger",
+            "application/msword" or "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => "fas fa-file-word text-primary",
+            "application/vnd.ms-excel" or "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" => "fas fa-file-excel text-success",
+            string mime when mime?.StartsWith("image/") == true => "fas fa-file-image text-info",
+            "text/plain" => "fas fa-file-alt text-secondary",
+            _ => "fas fa-file text-muted"
+        };
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024)
+            return $"{bytes} B";
+        else if (bytes < 1024 * 1024)
+            return $"{bytes / 1024.0:F1} KB";
+        else
+            return $"{bytes / (1024.0 * 1024.0):F1} MB";
+    }
+}
