@@ -1,0 +1,391 @@
+@model IEnumerable<VcBlazor.Data.Entities.ResultSubmission>
+
+@{
+    ViewData["Title"] = "Soumissions de Résultats";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-ballot-check text-primary me-2"></i>
+                Soumissions de Résultats
+            </h2>
+            <p class="text-muted mb-0">Gestion des soumissions de résultats électoraux par bureau de vote</p>
+        </div>
+        <div>
+            <a asp-action="PollingStationSubmit" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>
+                Nouvelle Soumission
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistiques Rapides -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                            <i class="fas fa-file-alt text-primary fa-lg"></i>
+                        </div>
+                    </div>
+                    <h4 class="mb-1">@Model.Count()</h4>
+                    <small class="text-muted">Total Soumissions</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                            <i class="fas fa-check-circle text-success fa-lg"></i>
+                        </div>
+                    </div>
+                    <h4 class="mb-1">@Model.Count(s => s.Status == "verified")</h4>
+                    <small class="text-muted">Validées</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                            <i class="fas fa-clock text-warning fa-lg"></i>
+                        </div>
+                    </div>
+                    <h4 class="mb-1">@Model.Count(s => s.Status == "submitted")</h4>
+                    <small class="text-muted">En Attente</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                            <i class="fas fa-times-circle text-danger fa-lg"></i>
+                        </div>
+                    </div>
+                    <h4 class="mb-1">@Model.Count(s => s.Status == "rejected")</h4>
+                    <small class="text-muted">Rejetées</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Statut</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">Tous les statuts</option>
+                        <option value="submitted">Soumis</option>
+                        <option value="verified">Validé</option>
+                        <option value="rejected">Rejeté</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Bureau de Vote</label>
+                    <input type="text" class="form-control" id="pollingStationFilter" placeholder="Rechercher un bureau...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date (à partir de)</label>
+                    <input type="date" class="form-control" id="dateFilter">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                        <i class="fas fa-eraser me-1"></i>
+                        Réinitialiser
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des Soumissions -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-1"></i>
+                Liste des Soumissions
+            </h5>
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-outline-primary" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel me-1"></i>
+                    Exporter Excel
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="submissionsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Bureau de Vote</th>
+                                <th>Type</th>
+                                <th>Statut</th>
+                                <th>Électeurs</th>
+                                <th>Votes Totaux</th>
+                                <th>Taux Participation</th>
+                                <th>Soumis le</th>
+                                <th>Documents</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var submission in Model)
+                            {
+                                <tr data-status="@submission.Status.ToLower()" data-polling-station="@(submission.PollingStation?.Name ?? "N/A")" data-date="@submission.SubmittedAt.ToString("yyyy-MM-dd")">
+                                    <td>
+                                        <div>
+                                            <strong>@(submission.PollingStation?.Name ?? $"Bureau #{submission.PollingStationId}")</strong>
+                                            <br>
+                                            <small class="text-muted">ID: @submission.PollingStationId</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            @submission.SubmissionType?.ToUpper()
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var statusClass = submission.Status switch
+                                            {
+                                                "verified" => "success",
+                                                "submitted" => "warning",
+                                                "rejected" => "danger",
+                                                _ => "secondary"
+                                            };
+                                            var statusText = submission.Status switch
+                                            {
+                                                "verified" => "Validé",
+                                                "submitted" => "En Attente",
+                                                "rejected" => "Rejeté",
+                                                _ => submission.Status
+                                            };
+                                        }
+                                        <span class="badge bg-@statusClass">
+                                            @statusText
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>@submission.RegisteredVoters.ToString("N0")</strong>
+                                    </td>
+                                    <td>
+                                        <strong>@submission.TotalVotes.ToString("N0")</strong>
+                                    </td>
+                                    <td>
+                                        @if (submission.RegisteredVoters > 0 && submission.TotalVotes > 0)
+                                        {
+                                            var turnout = (double)submission.TotalVotes / submission.RegisteredVoters * 100;
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                                    <div class="progress-bar" style="width: @turnout.ToString("F1")%"></div>
+                                                </div>
+                                                <small><strong>@turnout.ToString("F1")%</strong></small>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div>
+                                            @submission.SubmittedAt.ToString("dd/MM/yyyy")
+                                            <br>
+                                            <small class="text-muted">@submission.SubmittedAt.ToString("HH:mm")</small>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-action="DocumentGallery" asp-route-id="@submission.Id" 
+                                           class="btn btn-sm btn-outline-primary" title="Voir les documents">
+                                            <i class="fas fa-folder-open"></i>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Details" asp-route-id="@submission.Id" 
+                                               class="btn btn-outline-primary" title="Voir les détails">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            
+                                            @if (submission.Status != "verified")
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@submission.Id" 
+                                                   class="btn btn-outline-warning" title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            }
+                                            
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                                                        data-bs-toggle="dropdown">
+                                                    <i class="fas fa-cog"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a asp-action="UploadDocument" asp-route-id="@submission.Id" 
+                                                           class="dropdown-item">
+                                                            <i class="fas fa-upload me-2"></i>Ajouter Documents
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a asp-action="DocumentGallery" asp-route-id="@submission.Id" 
+                                                           class="dropdown-item">
+                                                            <i class="fas fa-images me-2"></i>Galerie Documents
+                                                        </a>
+                                                    </li>
+                                                    @if (submission.Status == "submitted")
+                                                    {
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <button type="button" class="dropdown-item text-success" 
+                                                                    onclick="changeStatus(@submission.Id, 'verified')">
+                                                                <i class="fas fa-check me-2"></i>Valider
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <button type="button" class="dropdown-item text-danger" 
+                                                                    onclick="changeStatus(@submission.Id, 'rejected')">
+                                                                <i class="fas fa-times me-2"></i>Rejeter
+                                                            </button>
+                                                        </li>
+                                                    }
+                                                    @if (submission.Status != "verified")
+                                                    {
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <a asp-action="Delete" asp-route-id="@submission.Id" 
+                                                               class="dropdown-item text-danger">
+                                                                <i class="fas fa-trash me-2"></i>Supprimer
+                                                            </a>
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-inbox fa-3x text-muted"></i>
+                    </div>
+                    <h5 class="text-muted">Aucune soumission trouvée</h5>
+                    <p class="text-muted mb-4">Commencez par créer une nouvelle soumission de résultats.</p>
+                    <a asp-action="PollingStationSubmit" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        Créer une Soumission
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Filtrage des résultats
+        function filterTable() {
+            const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+            const pollingStationFilter = document.getElementById('pollingStationFilter').value.toLowerCase();
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            const rows = document.querySelectorAll('#submissionsTable tbody tr');
+            
+            rows.forEach(row => {
+                const status = row.getAttribute('data-status');
+                const pollingStation = row.getAttribute('data-polling-station').toLowerCase();
+                const date = row.getAttribute('data-date');
+                
+                let showRow = true;
+                
+                // Filtre statut
+                if (statusFilter && status !== statusFilter) {
+                    showRow = false;
+                }
+                
+                // Filtre bureau de vote
+                if (pollingStationFilter && !pollingStation.includes(pollingStationFilter)) {
+                    showRow = false;
+                }
+                
+                // Filtre date
+                if (dateFilter && date < dateFilter) {
+                    showRow = false;
+                }
+                
+                row.style.display = showRow ? '' : 'none';
+            });
+        }
+        
+        // Attacher les événements de filtrage
+        document.getElementById('statusFilter').addEventListener('change', filterTable);
+        document.getElementById('pollingStationFilter').addEventListener('input', filterTable);
+        document.getElementById('dateFilter').addEventListener('change', filterTable);
+        
+        // Réinitialiser les filtres
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('pollingStationFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            filterTable();
+        }
+        
+        // Changer le statut d'une soumission
+        function changeStatus(submissionId, newStatus) {
+            if (confirm('Êtes-vous sûr de vouloir changer le statut de cette soumission ?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("ChangeStatus")';
+                
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = submissionId;
+                
+                const statusInput = document.createElement('input');
+                statusInput.type = 'hidden';
+                statusInput.name = 'newStatus';
+                statusInput.value = newStatus;
+                
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                
+                form.appendChild(idInput);
+                form.appendChild(statusInput);
+                form.appendChild(tokenInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        // Export Excel (placeholder)
+        function exportToExcel() {
+            alert('Fonctionnalité d\'export Excel à implémenter');
+        }
+    </script>
+}
+
+<!-- Token anti-forgery pour les formulaires AJAX -->
+@Html.AntiForgeryToken()

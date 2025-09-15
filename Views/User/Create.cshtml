@@ -412,12 +412,12 @@
         const file = e.target.files[0];
         if (file) {
             if (file.size > 2 * 1024 * 1024) {
-                alert('L\\'avatar ne doit pas dépasser 2MB');
+                alert('L avatar ne doit pas dépasser 2MB');
                 return;
             }
 
             if (!file.type.match(/^image\/(jpeg|jpg|png|gif)$/)) {
-                alert('Format d\\'image non supporté');
+                alert('Format d image non supporté');
                 return;
             }
 

@@ -43,7 +43,8 @@ builder.Services.AddSyncfusionBlazor();
 
 // Add custom services
 builder.Services.AddScoped<CsvImportService>();
-builder.Services.AddScoped<VcBlazor.Services.IDocumentService, VcBlazor.Services.DocumentService>();
+// TODO: Réactiver DocumentService après avoir corrigé le contrôleur principal
+// builder.Services.AddScoped<VcBlazor.Services.IDocumentService, VcBlazor.Services.DocumentService>();
 // Add Authentication and Authorization
 builder.Services.AddAuthentication("Cookies")
     .AddCookie("Cookies", options =>

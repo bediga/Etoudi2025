@@ -1,0 +1,531 @@
+@model VcBlazor.Models.TwoStepSubmissionViewModel
+@{
+    ViewData["Title"] = "Soumission des Résultats - Workflow en 2 Étapes";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-poll-h me-2"></i>
+                        Soumission des Résultats Électoraux - Workflow en 2 Étapes
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Warning"] != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            @TempData["Warning"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Indicateur d'étapes -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-center">
+                                <div class="step-indicator">
+                                    <div class="step @(Model.CurrentStep >= 1 ? "active" : "") @(Model.CurrentStep > 1 ? "completed" : "")">
+                                        <span class="step-number">1</span>
+                                        <span class="step-title">Bureau & Totaux</span>
+                                    </div>
+                                    <div class="step-connector"></div>
+                                    <div class="step @(Model.CurrentStep >= 2 ? "active" : "")">
+                                        <span class="step-number">2</span>
+                                        <span class="step-title">Votes par Candidat</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.CurrentStep == 1)
+                    {
+                        <!-- ÉTAPE 1 : BUREAU DE VOTE ET TOTAUX -->
+                        <form asp-action="SubmitStep1" method="post" id="step1Form" class="needs-validation" novalidate>
+                            @Html.AntiForgeryToken()
+                            @Html.HiddenFor(m => m.CurrentStep)
+                            @Html.HiddenFor(m => m.ResultSubmissionId)
+                            
+                            <div class="row">
+                                <!-- Bureau de Vote -->
+                                <div class="col-md-6">
+                                    <div class="card border-info mb-4">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0"><i class="fas fa-building me-2"></i>Sélection du Bureau de Vote</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Rechercher Bureau de Vote</label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="pollingStationSearch" 
+                                                           placeholder="Tapez le nom du bureau, commune, région..." 
+                                                           autocomplete="off" />
+                                                    <button class="btn btn-outline-secondary" type="button" id="clearPollingStation">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                                <input asp-for="PollingStationId" type="hidden" id="selectedPollingStationId" required />
+                                                <div id="pollingStationResults" class="list-group mt-2" style="display: none; max-height: 300px; overflow-y: auto;"></div>
+                                                <span asp-validation-for="PollingStationId" class="text-danger"></span>
+                                            </div>
+
+                                            <div id="pollingStationInfo" class="mt-3" style="display: none;">
+                                                <div class="alert alert-info">
+                                                    <h6><i class="fas fa-info-circle"></i> Informations du Bureau</h6>
+                                                    <p class="mb-1"><strong>Bureau :</strong> <span id="selectedStationName"></span></p>
+                                                    <p class="mb-1"><strong>Commune :</strong> <span id="selectedCommune"></span></p>
+                                                    <p class="mb-1"><strong>Région :</strong> <span id="selectedRegion"></span></p>
+                                                    <p class="mb-0"><strong>Électeurs inscrits :</strong> <span id="selectedRegistered"></span></p>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label asp-for="RegisteredVoters" class="form-label fw-bold">Électeurs Inscrits</label>
+                                                <input asp-for="RegisteredVoters" class="form-control" readonly />
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label asp-for="SubmissionType" class="form-label fw-bold">Type de Soumission</label>
+                                                <select asp-for="SubmissionType" class="form-select">
+                                                    <option value="final">Résultats Finaux</option>
+                                                    <option value="preliminary">Résultats Préliminaires</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Totaux des Votes -->
+                                <div class="col-md-6">
+                                    <div class="card border-success mb-4">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Totaux des Votes</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <label asp-for="TotalVotes" class="form-label fw-bold">Votes Totaux</label>
+                                                <input asp-for="TotalVotes" class="form-control" type="number" min="0" required />
+                                                <span asp-validation-for="TotalVotes" class="text-danger"></span>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label asp-for="BlankVotes" class="form-label fw-bold">Votes Blancs</label>
+                                                <input asp-for="BlankVotes" class="form-control" type="number" min="0" required />
+                                                <span asp-validation-for="BlankVotes" class="text-danger"></span>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label asp-for="NullVotes" class="form-label fw-bold">Votes Nuls</label>
+                                                <input asp-for="NullVotes" class="form-control" type="number" min="0" required />
+                                                <span asp-validation-for="NullVotes" class="text-danger"></span>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Taux de Participation</label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="turnoutRate" readonly />
+                                                    <span class="input-group-text">%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a asp-action="Index" class="btn btn-secondary">
+                                            <i class="fas fa-arrow-left me-2"></i>Annuler
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-arrow-right me-2"></i>Étape Suivante
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    }
+                    else if (Model.CurrentStep == 2)
+                    {
+                        <!-- ÉTAPE 2 : VOTES PAR CANDIDAT -->
+                        <form asp-action="SubmitStep2" method="post" id="step2Form" class="needs-validation" novalidate>
+                            @Html.AntiForgeryToken()
+                            @Html.HiddenFor(m => m.CurrentStep)
+                            @Html.HiddenFor(m => m.ResultSubmissionId)
+                            @Html.HiddenFor(m => m.PollingStationId)
+                            @Html.HiddenFor(m => m.TotalVotes)
+                            @Html.HiddenFor(m => m.BlankVotes)
+                            @Html.HiddenFor(m => m.NullVotes)
+                            @Html.HiddenFor(m => m.RegisteredVoters)
+                            @Html.HiddenFor(m => m.SubmissionType)
+
+                            <!-- Récapitulatif Étape 1 -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card border-secondary">
+                                        <div class="card-header bg-secondary text-white">
+                                            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Récapitulatif - Étape 1</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <p><strong>Total Votes :</strong> @Model.TotalVotes</p>
+                                                    <p><strong>Votes Blancs :</strong> @Model.BlankVotes</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <p><strong>Votes Nuls :</strong> @Model.NullVotes</p>
+                                                    <p><strong>Type :</strong> @Model.SubmissionType</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Votes par Candidat -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card border-warning">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h6 class="mb-0"><i class="fas fa-users me-2"></i>Votes par Candidat</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            @if (Model.CandidateVotes != null && Model.CandidateVotes.Any())
+                                            {
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Candidat</th>
+                                                                <th>Parti</th>
+                                                                <th>Votes</th>
+                                                                <th>Pourcentage</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @for (int i = 0; i < Model.CandidateVotes.Count; i++)
+                                                            {
+                                                                <tr>
+                                                                    <td>
+                                                                        @Html.HiddenFor(m => m.CandidateVotes[i].CandidateId)
+                                                                        @Html.HiddenFor(m => m.CandidateVotes[i].CandidateName)
+                                                                        @Html.HiddenFor(m => m.CandidateVotes[i].Party)
+                                                                        <strong>@Model.CandidateVotes[i].CandidateName</strong>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="badge bg-secondary">@Model.CandidateVotes[i].Party</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        @Html.TextBoxFor(m => m.CandidateVotes[i].Votes, new { @class = "form-control candidate-votes", @type = "number", @min = "0", style = "width: 100px;" })
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="fw-bold candidate-percentage">0.00%</span>
+                                                                        @Html.HiddenFor(m => m.CandidateVotes[i].Percentage, new { @class = "candidate-percentage-input" })
+                                                                    </td>
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <div class="mt-3">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="card bg-light">
+                                                                <div class="card-body">
+                                                                    <h6>Contrôle de Cohérence</h6>
+                                                                    <p><strong>Total candidats :</strong> <span id="totalCandidateVotes">0</span></p>
+                                                                    <p><strong>Votes blancs :</strong> @Model.BlankVotes</p>
+                                                                    <p><strong>Votes nuls :</strong> @Model.NullVotes</p>
+                                                                    <hr>
+                                                                    <p><strong>Total calculé :</strong> <span id="calculatedTotal">@Model.BlankVotes</span></p>
+                                                                    <p><strong>Total attendu :</strong> @Model.TotalVotes</p>
+                                                                    <div id="coherenceCheck" class="mt-2"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="alert alert-warning">
+                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                    Aucun candidat trouvé. Veuillez vérifier la configuration des candidats.
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between">
+                                        <a asp-action="TwoStepSubmission" asp-route-id="@Model.ResultSubmissionId" class="btn btn-secondary">
+                                            <i class="fas fa-arrow-left me-2"></i>Étape Précédente
+                                        </a>
+                                        <button type="submit" class="btn btn-success" id="finalSubmitBtn">
+                                            <i class="fas fa-check me-2"></i>Finaliser la Soumission
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            border: 2px solid #dee2e6;
+        }
+
+        .step.active .step-number {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .step.completed .step-number {
+            background-color: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .step-title {
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .step-connector {
+            width: 80px;
+            height: 2px;
+            background-color: #dee2e6;
+            position: relative;
+            top: -20px;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentStep = @Model.CurrentStep;
+            
+            if (currentStep === 1) {
+                initStep1();
+            } else if (currentStep === 2) {
+                initStep2();
+            }
+        });
+
+        function initStep1() {
+            let searchTimeout;
+            const pollingStationSearch = document.getElementById('pollingStationSearch');
+            const pollingStationResults = document.getElementById('pollingStationResults');
+            const selectedPollingStationId = document.getElementById('selectedPollingStationId');
+            const clearPollingStation = document.getElementById('clearPollingStation');
+            const registeredVotersInput = document.getElementById('RegisteredVoters');
+            const totalVotesInput = document.getElementById('TotalVotes');
+            const turnoutRateInput = document.getElementById('turnoutRate');
+
+            // Recherche de bureau de vote
+            pollingStationSearch.addEventListener('input', function() {
+                const term = this.value.trim();
+                
+                clearTimeout(searchTimeout);
+                
+                if (term.length < 2) {
+                    pollingStationResults.style.display = 'none';
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    fetch(`/ResultSubmission/SearchPollingStationsStep1?term=${encodeURIComponent(term)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            displayPollingStationResults(data);
+                        })
+                        .catch(error => {
+                            console.error('Erreur de recherche:', error);
+                        });
+                }, 300);
+            });
+
+            function displayPollingStationResults(stations) {
+                pollingStationResults.innerHTML = '';
+                
+                if (stations.length === 0) {
+                    pollingStationResults.innerHTML = '<div class="list-group-item text-muted">Aucun bureau trouvé</div>';
+                } else {
+                    stations.forEach(station => {
+                        const item = document.createElement('a');
+                        item.href = '#';
+                        item.className = 'list-group-item list-group-item-action';
+                        item.innerHTML = `
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">${station.name}</h6>
+                                <small>${station.registeredVoters} électeurs</small>
+                            </div>
+                            <p class="mb-1">${station.commune}, ${station.department}</p>
+                            <small>${station.region}</small>
+                        `;
+                        
+                        item.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            selectPollingStation(station);
+                        });
+                        
+                        pollingStationResults.appendChild(item);
+                    });
+                }
+                
+                pollingStationResults.style.display = 'block';
+            }
+
+            function selectPollingStation(station) {
+                pollingStationSearch.value = station.name;
+                selectedPollingStationId.value = station.id;
+                registeredVotersInput.value = station.registeredVoters;
+                pollingStationResults.style.display = 'none';
+
+                // Afficher les infos du bureau
+                document.getElementById('selectedStationName').textContent = station.name;
+                document.getElementById('selectedCommune').textContent = station.commune;
+                document.getElementById('selectedRegion').textContent = station.region;
+                document.getElementById('selectedRegistered').textContent = station.registeredVoters;
+                document.getElementById('pollingStationInfo').style.display = 'block';
+
+                calculateTurnout();
+            }
+
+            // Effacer la sélection
+            clearPollingStation.addEventListener('click', function() {
+                pollingStationSearch.value = '';
+                selectedPollingStationId.value = '';
+                registeredVotersInput.value = '';
+                pollingStationResults.style.display = 'none';
+                document.getElementById('pollingStationInfo').style.display = 'none';
+            });
+
+            // Calcul du taux de participation
+            function calculateTurnout() {
+                const totalVotes = parseInt(totalVotesInput.value) || 0;
+                const registeredVoters = parseInt(registeredVotersInput.value) || 0;
+                
+                if (registeredVoters > 0) {
+                    const turnout = (totalVotes / registeredVoters * 100).toFixed(2);
+                    turnoutRateInput.value = turnout;
+                } else {
+                    turnoutRateInput.value = '0.00';
+                }
+            }
+
+            if (totalVotesInput) {
+                totalVotesInput.addEventListener('input', calculateTurnout);
+            }
+        }
+
+        function initStep2() {
+            const candidateVotesInputs = document.querySelectorAll('.candidate-votes');
+            const totalVotes = @Model.TotalVotes;
+            const blankVotes = @Model.BlankVotes;
+            const nullVotes = @Model.NullVotes;
+
+            function calculatePercentagesAndCheck() {
+                let totalCandidateVotes = 0;
+                
+                candidateVotesInputs.forEach(function(input, index) {
+                    const votes = parseInt(input.value) || 0;
+                    totalCandidateVotes += votes;
+                    
+                    const percentage = totalVotes > 0 ? (votes / totalVotes * 100).toFixed(2) : 0;
+                    
+                    const percentageSpan = input.closest('tr').querySelector('.candidate-percentage');
+                    const percentageInput = input.closest('tr').querySelector('.candidate-percentage-input');
+                    
+                    percentageSpan.textContent = percentage + '%';
+                    percentageInput.value = percentage;
+                });
+
+                // Mise à jour des totaux
+                document.getElementById('totalCandidateVotes').textContent = totalCandidateVotes;
+                const calculatedTotal = totalCandidateVotes + blankVotes + nullVotes;
+                document.getElementById('calculatedTotal').textContent = calculatedTotal;
+
+                // Vérification de cohérence
+                const coherenceCheck = document.getElementById('coherenceCheck');
+                const finalSubmitBtn = document.getElementById('finalSubmitBtn');
+                
+                if (calculatedTotal === totalVotes) {
+                    coherenceCheck.innerHTML = '<div class="alert alert-success py-2 mb-0"><i class="fas fa-check"></i> Totaux cohérents</div>';
+                    finalSubmitBtn.disabled = false;
+                } else {
+                    coherenceCheck.innerHTML = '<div class="alert alert-danger py-2 mb-0"><i class="fas fa-exclamation"></i> Totaux incohérents</div>';
+                    finalSubmitBtn.disabled = true;
+                }
+            }
+
+            candidateVotesInputs.forEach(function(input) {
+                input.addEventListener('input', calculatePercentagesAndCheck);
+            });
+
+            // Calcul initial
+            calculatePercentagesAndCheck();
+        }
+    </script>
+}

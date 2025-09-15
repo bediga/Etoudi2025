@@ -1,0 +1,62 @@
+@{
+    ViewData["Title"] = "Statut de la Base de Données";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-database me-2"></i>Statut de la Base de Données</h2>
+            
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h3>@ViewBag.CandidateCount</h3>
+                            <p>Candidats</p>
+                            <i class="fas fa-user-tie fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h3>@ViewBag.PollingStationCount</h3>
+                            <p>Bureaux de Vote</p>
+                            <i class="fas fa-vote-yea fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h3>@ViewBag.SubmissionCount</h3>
+                            <p>Soumissions</p>
+                            <i class="fas fa-paper-plane fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Actions Disponibles</h5>
+                        <div class="btn-group" role="group">
+                            <a href="@Url.Action("Initialize", "DataInit")" class="btn btn-primary">
+                                <i class="fas fa-database me-2"></i>Initialiser Base de Données
+                            </a>
+                            <a href="@Url.Action("PollingStationSubmit", "ResultSubmission")" class="btn btn-success">
+                                <i class="fas fa-poll-h me-2"></i>Soumission Résultats
+                            </a>
+                            <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">
+                                <i class="fas fa-home me-2"></i>Accueil
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
